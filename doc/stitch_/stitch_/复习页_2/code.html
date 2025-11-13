@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Voca - 注册</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;700&amp;family=Noto+Sans+SC:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0,
+            'wght' 400,
+            'GRAD' 0,
+            'opsz' 24
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#135bec",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101622",
+                        "custom-black": "#000000",
+                        "custom-white": "#FFFFFF",
+                        "custom-grey": "#888888",
+                        "input-border": "#E5E7EB",
+                    },
+                    fontFamily: {
+                        "display": ["Lexend", "Noto Sans SC", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-custom-white font-display">
+<div class="relative flex h-auto min-h-screen w-full flex-col bg-custom-white group/design-root overflow-x-hidden">
+<div class="flex flex-col flex-1 justify-between p-6">
+<div class="flex-grow flex flex-col justify-center pb-16">
+<div class="text-center mb-12">
+<h1 class="text-custom-black text-3xl font-bold tracking-tight">创建你的 Voca 账户</h1>
+<p class="text-custom-grey mt-2 text-base">开始你的高效背单词之旅</p>
+</div>
+<div class="space-y-6">
+<div>
+<label class="sr-only" for="email">邮箱地址</label>
+<input class="w-full px-4 py-3 border border-input-border rounded-xl bg-white text-custom-black placeholder-custom-grey focus:ring-2 focus:ring-custom-black focus:border-transparent" id="email" placeholder="邮箱地址" type="email"/>
+</div>
+<div>
+<label class="sr-only" for="password">密码</label>
+<input class="w-full px-4 py-3 border border-input-border rounded-xl bg-white text-custom-black placeholder-custom-grey focus:ring-2 focus:ring-custom-black focus:border-transparent" id="password" placeholder="密码" type="password"/>
+</div>
+</div>
+</div>
+<div class="space-y-4">
+<button class="w-full bg-custom-black text-custom-white font-bold py-4 px-4 rounded-xl text-lg flex items-center justify-center">
+                    注册
+                </button>
+<p class="text-center text-custom-grey text-sm">
+                    已经有账户了？ <a class="font-medium text-custom-black hover:underline" href="#">登录</a>
+</p>
+</div>
+</div>
+</div>
+
+</body></html>

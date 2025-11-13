@@ -23,7 +23,14 @@
 			</view>
 
 			<!-- 登录按钮 -->
-			<wd-button type="primary" class="login-button" block round @click="handleLogin">
+			<wd-button
+				type="primary"
+				class="login-button"
+				block
+				round
+				@click="handleLogin"
+				:disabled="!canLogin"
+			>
 				登录
 			</wd-button>
 
@@ -42,12 +49,17 @@
 </template>
 
 <script setup lang="ts">
-	import { reactive } from 'vue'
+	import { reactive, computed } from 'vue'
 
 	// 表单数据
 	const formData = reactive({
 		username: '',
 		password: ''
+	})
+
+	// 检查是否可以登录
+	const canLogin = computed(() => {
+		return formData.username.trim() !== '' && formData.password.trim() !== '' && formData.password.length >= 6
 	})
 
 	// 处理输入变化
@@ -57,6 +69,18 @@
 
 	// 处理登录
 	const handleLogin = () => {
+		console.log('点击登录按钮')
+		console.log('canLogin.value:', canLogin.value)
+		console.log('formData:', formData)
+
+		if (!canLogin.value) {
+			uni.showToast({
+				title: '请输入账号和密码',
+				icon: 'none'
+			})
+			return
+		}
+
 		console.log('登录数据:', formData)
 		// 这里添加登录逻辑
 	}

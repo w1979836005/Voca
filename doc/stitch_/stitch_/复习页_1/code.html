@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+
+<html lang="zh"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Voca - 今日复习</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;700&amp;family=Noto+Sans+SC:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings:
+        'FILL' 0,
+        'wght' 400,
+        'GRAD' 0,
+        'opsz' 24
+      }
+    </style>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#135bec",
+              "background-light": "#f6f6f8",
+              "background-dark": "#101622",
+              "custom-black": "#000000",
+              "custom-white": "#FFFFFF",
+              "custom-grey": "#888888",
+            },
+            fontFamily: {
+              "display": ["Lexend", "Noto Sans SC", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-custom-white font-display">
+<div class="relative flex h-auto min-h-screen w-full flex-col bg-custom-white group/design-root overflow-x-hidden">
+<!-- Top App Bar -->
+<div class="flex flex-col gap-2 bg-custom-white p-4 pb-2 pt-8 sticky top-0 z-10">
+<p class="text-custom-black tracking-light text-[28px] font-bold leading-tight">今日复习</p>
+</div>
+<!-- Body Text -->
+<p class="text-custom-grey text-base font-normal leading-normal pb-3 pt-1 px-4">12个单词</p>
+<!-- Spacer -->
+<div class="h-4 bg-custom-white"></div>
+<!-- Word List -->
+<div class="flex flex-col px-4 space-y-2 pb-28">
+<!-- List Item 1 -->
+<div class="flex flex-col gap-4 py-4 border-b border-gray-200">
+<div class="flex flex-col justify-center">
+<p class="text-custom-black text-base font-medium leading-normal line-clamp-1">apple</p>
+<p class="text-custom-grey text-sm font-normal leading-normal line-clamp-2">2小时后复习</p>
+</div>
+</div>
+<!-- List Item 2 -->
+<div class="flex flex-col gap-4 py-4 border-b border-gray-200">
+<div class="flex flex-col justify-center">
+<p class="text-custom-black text-base font-medium leading-normal line-clamp-1">design</p>
+<p class="text-custom-grey text-sm font-normal leading-normal line-clamp-2">明天复习</p>
+</div>
+</div>
+<!-- List Item 3 -->
+<div class="flex flex-col gap-4 py-4 border-b border-gray-200">
+<div class="flex flex-col justify-center">
+<p class="text-custom-black text-base font-medium leading-normal line-clamp-1">minimalism</p>
+<p class="text-custom-grey text-sm font-normal leading-normal line-clamp-2">明天复习</p>
+</div>
+</div>
+<!-- List Item 4 -->
+<div class="flex flex-col gap-4 py-4 border-b border-gray-200">
+<div class="flex flex-col justify-center">
+<p class="text-custom-black text-base font-medium leading-normal line-clamp-1">interface</p>
+<p class="text-custom-grey text-sm font-normal leading-normal line-clamp-2">3天后复习</p>
+</div>
+</div>
+<!-- List Item 5 -->
+<div class="flex flex-col gap-4 py-4 border-b border-gray-200">
+<div class="flex flex-col justify-center">
+<p class="text-custom-black text-base font-medium leading-normal line-clamp-1">component</p>
+<p class="text-custom-grey text-sm font-normal leading-normal line-clamp-2">3天后复习</p>
+</div>
+</div>
+<!-- List Item 6 -->
+<div class="flex flex-col gap-4 py-4 border-b border-gray-200">
+<div class="flex flex-col justify-center">
+<p class="text-custom-black text-base font-medium leading-normal line-clamp-1">vocabulary</p>
+<p class="text-custom-grey text-sm font-normal leading-normal line-clamp-2">1周后复习</p>
+</div>
+</div>
+</div>
+<!-- Sticky Bottom Button -->
+<div class="fixed bottom-0 left-0 right-0 p-4 bg-custom-white">
+<button class="w-full bg-custom-black text-custom-white font-bold py-4 px-4 rounded-xl text-lg flex items-center justify-center">
+                开始复习
+            </button>
+</div>
+</div>
+</body></html>

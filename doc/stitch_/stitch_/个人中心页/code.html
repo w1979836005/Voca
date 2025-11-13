@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+
+<html class="light" lang="zh"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Voca - 个人中心</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#1773cf",
+            "background-light": "#f6f7f8",
+            "background-dark": "#111921",
+          },
+          fontFamily: {
+            "display": ["Inter"]
+          },
+          borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+        },
+      },
+    }
+  </script>
+<style>
+    body {
+      background-color: #ffffff;
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-display">
+<div class="relative flex h-auto min-h-screen w-full flex-col bg-white group/design-root overflow-x-hidden">
+<!-- Top App Bar -->
+<div class="flex items-center bg-white p-4 pb-2 justify-between">
+<div class="flex size-12 shrink-0 items-center justify-center text-black">
+<span class="material-symbols-outlined text-2xl">arrow_back_ios_new</span>
+</div>
+<h2 class="flex-1 text-center text-lg font-bold leading-tight tracking-[-0.015em] text-black">个人中心</h2>
+<div class="flex size-12 shrink-0 items-center"></div> <!-- Placeholder for balance -->
+</div>
+<!-- Profile Header -->
+<div class="flex p-4 @container pt-8">
+<div class="flex w-full flex-col items-center gap-4">
+<div class="flex flex-col items-center gap-4">
+<div class="aspect-square w-24 rounded-full bg-black bg-cover bg-center bg-no-repeat" data-alt="User avatar placeholder" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA72nsMkoLA_JZmaFjW0wUtGSpcs9w_7pwW3Ecomu9Ji8dBBcIUkO3NiCUZFaKUKWFqTqChoiAJ-55iUCwjbJnRpiUeQubWV-oJ_uEKRArBf2aYjHZ_n4j3Gynf-69Zu034na0oRAJRmFSIt9UJwbi2ZNqTAGNoIg9_YHNRF0v0fGSEjZ4TSpFqMVlZfvrm0uYqgspk3osrynoNs9W_sgzrOkA8wLv9ucR_m8hbhAvD2YYAFz6v4OJybcMef73JXY6Ma8E4ByXhBz0E");'></div>
+<p class="text-[22px] font-bold leading-tight tracking-[-0.015em] text-black text-center">User_Name</p>
+</div>
+</div>
+</div>
+<!-- Spacer -->
+<div class="h-5 bg-white"></div>
+<!-- Stats -->
+<div class="flex flex-wrap gap-4 p-4">
+<div class="flex min-w-[158px] flex-1 flex-col gap-2 rounded-lg border border-[#e0e0e0] bg-white p-6 text-center">
+<p class="text-base font-medium leading-normal text-black">已掌握单词</p>
+<p class="text-2xl font-bold leading-tight tracking-light text-black">1280</p>
+</div>
+<div class="flex min-w-[158px] flex-1 flex-col gap-2 rounded-lg border border-[#e0e0e0] bg-white p-6 text-center">
+<p class="text-base font-medium leading-normal text-black">连续学习天数</p>
+<p class="text-2xl font-bold leading-tight tracking-light text-black">120</p>
+</div>
+<div class="flex min-w-[158px] flex-1 flex-col gap-2 rounded-lg border border-[#e0e0e0] bg-white p-6 text-center">
+<p class="text-base font-medium leading-normal text-black">总学习时长</p>
+<p class="text-2xl font-bold leading-tight tracking-light text-black">85h 30m</p>
+</div>
+</div>
+<!-- Spacer -->
+<div class="h-8 bg-white"></div>
+<!-- List Items -->
+<div class="flex flex-col px-2">
+<!-- Daily Goal -->
+<div class="flex min-h-14 items-center justify-between gap-4 bg-white px-4">
+<div class="flex flex-1 items-center gap-4">
+<div class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-white text-black">
+<span class="material-symbols-outlined text-2xl">target</span>
+</div>
+<p class="flex-1 truncate text-base font-normal leading-normal text-black">每日目标</p>
+</div>
+<div class="shrink-0">
+<div class="flex size-7 items-center justify-center text-black">
+<span class="material-symbols-outlined text-2xl">chevron_right</span>
+</div>
+</div>
+</div>
+<div class="mx-4 h-px bg-[#e0e0e0]"></div>
+<!-- My Achievements -->
+<div class="flex min-h-14 items-center justify-between gap-4 bg-white px-4">
+<div class="flex flex-1 items-center gap-4">
+<div class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-white text-black">
+<span class="material-symbols-outlined text-2xl">emoji_events</span>
+</div>
+<p class="flex-1 truncate text-base font-normal leading-normal text-black">我的成就</p>
+</div>
+<div class="shrink-0">
+<div class="flex size-7 items-center justify-center text-black">
+<span class="material-symbols-outlined text-2xl">chevron_right</span>
+</div>
+</div>
+</div>
+<div class="mx-4 h-px bg-[#e0e0e0]"></div>
+<!-- About Us -->
+<div class="flex min-h-14 items-center justify-between gap-4 bg-white px-4">
+<div class="flex flex-1 items-center gap-4">
+<div class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-white text-black">
+<span class="material-symbols-outlined text-2xl">info</span>
+</div>
+<p class="flex-1 truncate text-base font-normal leading-normal text-black">关于我们</p>
+</div>
+<div class="shrink-0">
+<div class="flex size-7 items-center justify-center text-black">
+<span class="material-symbols-outlined text-2xl">chevron_right</span>
+</div>
+</div>
+</div>
+<div class="mx-4 h-px bg-[#e0e0e0]"></div>
+<!-- Logout -->
+<div class="flex min-h-14 items-center justify-between gap-4 bg-white px-4">
+<div class="flex flex-1 items-center gap-4">
+<div class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-white text-black">
+<span class="material-symbols-outlined text-2xl">logout</span>
+</div>
+<p class="flex-1 truncate text-base font-normal leading-normal text-black">退出登录</p>
+</div>
+<div class="shrink-0">
+<div class="flex size-7 items-center justify-center text-black">
+<span class="material-symbols-outlined text-2xl">chevron_right</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</body></html>

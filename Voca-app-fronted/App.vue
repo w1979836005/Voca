@@ -67,7 +67,9 @@
 		/* 设置页面基础样式 */
 		background-color: #f8f9fa;
 		color: #2c3e50;
-		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+		/* 使用项目定义的字体 */
+		font-family: 'Lexend', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+		font-weight: 400;
 	}
 
 	/* 全局主题变量 - 备用方案 */
@@ -77,5 +79,48 @@
 		--wot-color-warning: #f39c12;
 		--wot-color-danger: #e74c3c;
 		--wot-color-info: #3498db;
+	}
+
+	/* TabBar 样式优化 - 使用项目字体和毛玻璃效果 */
+	.uni-tabbar {
+		font-family: 'Lexend', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+		font-weight: 500 !important;
+		background: rgba(255, 255, 255, 0.85) !important;
+		backdrop-filter: blur(20px) !important;
+		-webkit-backdrop-filter: blur(20px) !important;
+		box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1) !important;
+		border-top: 1px solid rgba(0, 0, 0, 0.05) !important;
+	}
+
+	/* TabBar 文字样式 */
+	.uni-tabbar__item {
+		font-family: 'Lexend', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+		font-weight: 500 !important;
+	}
+
+	.uni-tabbar__item__text {
+		font-family: 'Lexend', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+		font-weight: 500 !important;
+		font-size: 22rpx !important;
+	}
+
+	/* TabBar 图标容器 */
+	.uni-tabbar__item__icon {
+		width: 50rpx !important;
+		height: 50rpx !important;
+	}
+
+	/* 毛玻璃背景增强 */
+	.uni-tabbar {
+		position: fixed !important;
+		bottom: 0 !important;
+		left: 0 !important;
+		right: 0 !important;
+		background: linear-gradient(to bottom,
+			rgba(255, 255, 255, 0.75) 0%,
+			rgba(255, 255, 255, 0.85) 50%,
+			rgba(255, 255, 255, 0.9) 100%) !important;
+		backdrop-filter: saturate(180%) blur(20px) !important;
+		-webkit-backdrop-filter: saturate(180%) blur(20px) !important;
 	}
 </style>

@@ -118,7 +118,7 @@ const formData = reactive({
 
 // 验证码倒计时
 const countdown = ref(0)
-const timer = ref<NodeJS.Timeout | null>(null)
+const timer = ref<any>(null)
 
 // 检查是否可以发送验证码
 const canSendCode = computed(() => {
@@ -132,7 +132,7 @@ const canRegister = computed(() => {
 		formData.code &&
 		formData.password &&
 		formData.confirmPassword &&
-		!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) &&
+		/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) &&
 		formData.password === formData.confirmPassword &&
 		formData.password.length >= 6
 	)
@@ -194,6 +194,10 @@ const sendVerificationCode = async () => {
 
 // 处理注册
 const handleRegister = async () => {
+	console.log('点击注册按钮')
+	console.log('canRegister.value:', canRegister.value)
+	console.log('formData:', formData)
+
 	if (!canRegister.value) {
 		uni.showToast({
 			title: '请完善注册信息',
@@ -259,6 +263,7 @@ const goToLogin = () => {
 onBeforeUnmount(() => {
 	if (timer.value) {
 		clearInterval(timer.value)
+		timer.value = null
 	}
 })
 </script>
@@ -266,6 +271,7 @@ onBeforeUnmount(() => {
 <style lang="scss">
 page {
 	background: #ffffff;
+	width: 100%;
 	height: 100%;
 	display: flex;
 	align-items: center;
@@ -273,7 +279,7 @@ page {
 }
 
 .register-container {
-	width: 90%;
+	width: 99%;
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
@@ -373,16 +379,20 @@ page {
 }
 
 .register-button {
-	width: 100%;
-	height: 80rpx;
-	font-size: 28rpx;
-	font-family: 'Lexend', sans-serif;
-	font-weight: bold !important;
-	letter-spacing: 2px;
-	margin: 40rpx 0 30rpx 0;
-	display: flex;
-	justify-content: center;
-	align-items: center;
+  width: 100%;
+  height: 80rpx;
+  background: #000000;
+  color: #ffffff;
+  border: none;
+  border-radius: 40rpx;
+  font-size: 28rpx;
+  font-family: 'Lexend', sans-serif;
+  font-weight: bold !important;
+  letter-spacing: 2px;
+  margin: 40rpx 0 30rpx 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .helper-actions {

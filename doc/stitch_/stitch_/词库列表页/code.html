@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+
+<html class="light" lang="zh"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Voca - 选择词库</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#000000", /* Modified for B&W theme */
+              "background-light": "#ffffff",
+              "background-dark": "#101622", /* Kept for potential dark mode, but not used in this design */
+            },
+            fontFamily: {
+              "display": ["Lexend", "PingFang SC", "Helvetica", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-display">
+<div class="relative flex h-auto min-h-screen w-full flex-col bg-background-light group/design-root overflow-x-hidden">
+<!-- Top App Bar -->
+<div class="sticky top-0 z-10 flex h-14 items-center border-b border-neutral-200 bg-background-light px-4">
+<h1 class="flex-1 text-center text-lg font-semibold text-black">选择词库</h1>
+</div>
+<!-- Vocabulary Book List -->
+<div class="flex flex-1 flex-col space-y-4 p-4">
+<!-- List Item 1: Selected -->
+<div class="flex cursor-pointer items-center justify-between gap-4 rounded-xl border-2 border-primary bg-background-light p-4 shadow-sm">
+<div class="flex flex-col">
+<p class="text-base font-semibold text-black">CET-4 核心词汇</p>
+<p class="mt-1 text-sm text-neutral-600">4500个必备单词</p>
+</div>
+<div class="flex shrink-0 items-center justify-center text-primary">
+<span class="material-symbols-outlined text-2xl font-bold">
+                        check_circle
+                    </span>
+</div>
+</div>
+<!-- List Item 2: Not Selected -->
+<div class="flex cursor-pointer items-center justify-between gap-4 rounded-xl border border-neutral-200 bg-background-light p-4 shadow-sm">
+<div class="flex flex-col">
+<p class="text-base font-semibold text-black">考研英语核心词汇</p>
+<p class="mt-1 text-sm text-neutral-600">5500个高频考点词</p>
+</div>
+<div class="flex shrink-0 items-center justify-center text-primary">
+</div>
+</div>
+<!-- List Item 3: Not Selected -->
+<div class="flex cursor-pointer items-center justify-between gap-4 rounded-xl border border-neutral-200 bg-background-light p-4 shadow-sm">
+<div class="flex flex-col">
+<p class="text-base font-semibold text-black">TOEFL 必背词汇</p>
+<p class="mt-1 text-sm text-neutral-600">覆盖听说读写全场景</p>
+</div>
+<div class="flex shrink-0 items-center justify-center text-primary">
+</div>
+</div>
+<!-- List Item 4: Not Selected -->
+<div class="flex cursor-pointer items-center justify-between gap-4 rounded-xl border border-neutral-200 bg-background-light p-4 shadow-sm">
+<div class="flex flex-col">
+<p class="text-base font-semibold text-black">IELTS 核心词汇</p>
+<p class="mt-1 text-sm text-neutral-600">雅思考试必备</p>
+</div>
+<div class="flex shrink-0 items-center justify-center text-primary">
+</div>
+</div>
+<!-- List Item 5: Not Selected -->
+<div class="flex cursor-pointer items-center justify-between gap-4 rounded-xl border border-neutral-200 bg-background-light p-4 shadow-sm">
+<div class="flex flex-col">
+<p class="text-base font-semibold text-black">GRE 核心词汇</p>
+<p class="mt-1 text-sm text-neutral-600">攻克高难度词汇</p>
+</div>
+<div class="flex shrink-0 items-center justify-center text-primary">
+</div>
+</div>
+</div>
+</div>
+</body></html>

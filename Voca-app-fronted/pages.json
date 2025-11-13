@@ -8,6 +8,13 @@
 	"pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
 
 		{
+			"path": "pages/home/home",
+			"style": {
+				"navigationBarTitleText": "",
+				"navigationStyle": "custom"
+			}
+		},
+		{
 			"path": "pages/login/login",
 			"style": {
 				"navigationBarTitleText": "",
@@ -29,12 +36,58 @@
 			}
 		},
 		{
+			"path": "pages/wordlist/wordlist",
+			"style": {
+				"navigationBarTitleText": "",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/profile/profile",
+			"style": {
+				"navigationBarTitleText": "",
+				"navigationStyle": "custom"
+			}
+		},
+		{
 			"path": "pages/index/index",
 			"style": {
 				"navigationBarTitleText": "uni-app"
 			}
 		}
 	],
+	"tabBar": {
+		"custom": true,
+		"color": "rgba(0, 0, 0, 0.6)",
+		"selectedColor": "#000000",
+		"backgroundColor": "rgba(255, 255, 255, 0.85)",
+		"borderStyle": "white",
+		"blurEffect": "extralight",
+		"fontSize": "22rpx",
+		"iconWidth": "50rpx",
+		"height": "110rpx",
+		"spacing": "8rpx",
+		"list": [
+			{
+				"pagePath": "pages/home/home",
+				"text": "首页",
+				"iconPath": "/static/tabbar/主页.png",
+				"selectedIconPath": "/static/tabbar/主页 (1).png"
+			},
+			{
+				"pagePath": "pages/wordlist/wordlist",
+				"text": "词单",
+				"iconPath": "/static/tabbar/词单.png",
+				"selectedIconPath": "/static/tabbar/词单(1).png"
+			},
+			{
+				"pagePath": "pages/profile/profile",
+				"text": "我的",
+				"iconPath": "/static/tabbar/用户.png",
+				"selectedIconPath": "/static/tabbar/用户 (1).png"
+			}
+		]
+	},
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
 		"navigationBarTitleText": "uni-app",

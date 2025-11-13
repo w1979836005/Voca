@@ -124,7 +124,7 @@ const formData = reactive({
 
 // 验证码倒计时
 const countdown = ref(0)
-const timer = ref<NodeJS.Timeout | null>(null)
+const timer = ref<any>(null)
 
 // 成功提示弹窗
 const showSuccessPopup = ref(false)
@@ -141,7 +141,7 @@ const canReset = computed(() => {
 		formData.code &&
 		formData.newPassword &&
 		formData.confirmPassword &&
-		!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) &&
+		/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) &&
 		formData.newPassword === formData.confirmPassword &&
 		formData.newPassword.length >= 6
 	)
@@ -203,6 +203,10 @@ const sendVerificationCode = async () => {
 
 // 处理重置密码
 const handleResetPassword = async () => {
+	console.log('点击重置密码按钮')
+	console.log('canReset.value:', canReset.value)
+	console.log('formData:', formData)
+
 	if (!canReset.value) {
 		uni.showToast({
 			title: '请完善信息',
@@ -263,6 +267,7 @@ const goToRegister = () => {
 onBeforeUnmount(() => {
 	if (timer.value) {
 		clearInterval(timer.value)
+		timer.value = null
 	}
 })
 </script>
@@ -277,6 +282,7 @@ page {
 }
 
 .forgot-container {
+	width: 90%;
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
