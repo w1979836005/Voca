@@ -29,20 +29,26 @@ export default {
 				{
 					pagePath: "pages/home/home",
 					text: "首页",
-					iconPath: "/static/tabbar/主页.png",
-					selectedIconPath: "/static/tabbar/主页 (1).png"
+					iconPath: "/static/tabbar/home.png",
+					selectedIconPath: "/static/tabbar/home-active.png"
 				},
 				{
 					pagePath: "pages/wordlist/wordlist",
 					text: "词单",
-					iconPath: "/static/tabbar/词单.png",
-					selectedIconPath: "/static/tabbar/词单(1).png"
+					iconPath: "/static/tabbar/wordlist.png",
+					selectedIconPath: "/static/tabbar/wordlist-active.png"
+				},
+				{
+					pagePath: "pages/translate/translate",
+					text: "翻译",
+					iconPath: "/static/tabbar/search.png",
+					selectedIconPath: "/static/tabbar/search-active.png"
 				},
 				{
 					pagePath: "pages/profile/profile",
 					text: "我的",
-					iconPath: "/static/tabbar/用户.png",
-					selectedIconPath: "/static/tabbar/用户 (1).png"
+					iconPath: "/static/tabbar/profile.png",
+					selectedIconPath: "/static/tabbar/profile-active.png"
 				}
 			]
 		}
@@ -77,20 +83,16 @@ export default {
 	left: 0;
 	right: 0;
 	height: 110rpx;
-	background: linear-gradient(to bottom,
-		rgba(255, 255, 255, 0.75) 0%,
-		rgba(255, 255, 255, 0.85) 50%,
-		rgba(255, 255, 255, 0.9) 100%
-	);
-	backdrop-filter: saturate(180%) blur(20px);
-	-webkit-backdrop-filter: saturate(180%) blur(20px);
+	background: rgba(255, 255, 255, 0.1);
+	backdrop-filter: saturate(180%) blur(30px);
+	-webkit-backdrop-filter: saturate(180%) blur(30px);
 	display: flex;
 	justify-content: space-around;
 	align-items: center;
 	padding: 10rpx 0;
 	box-sizing: border-box;
-	border-top: 1px solid rgba(0, 0, 0, 0.05);
-	box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+	border-top: none;
+	box-shadow: none;
 	z-index: 1000;
 }
 
@@ -106,9 +108,9 @@ export default {
 }
 
 .tabbar-icon {
-	width: 50rpx;
-	height: 50rpx;
-	margin-bottom: 6rpx;
+	width: 42rpx;
+	height: 42rpx;
+	margin-bottom: 12rpx;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -122,36 +124,24 @@ export default {
 
 .tabbar-text {
 	font-family: 'Lexend', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-	font-weight: 500;
-	font-size: 22rpx;
-	color: rgba(0, 0, 0, 0.6);
+	font-weight: 600;
+	font-size: 26rpx;
+	color: rgba(0, 0, 0, 0.8);
 	line-height: 1;
 	transition: all 0.3s ease;
+	text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
 }
 
 .tabbar-item.active {
 	.tabbar-text {
 		color: #000000;
-		font-weight: 600;
+		font-weight: 700;
+		text-shadow: 0 1px 3px rgba(255, 255, 255, 0.9);
 	}
 
 	.icon-image {
-		transform: scale(1.1);
+		transform: none;
+		filter: none;
 	}
-}
-
-/* 激活状态的光晕效果 */
-.tabbar-item.active::before {
-	content: '';
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
-	width: 80rpx;
-	height: 80rpx;
-	background: rgba(0, 0, 0, 0.05);
-	border-radius: 50%;
-	opacity: 0.5;
-	pointer-events: none;
 }
 </style>

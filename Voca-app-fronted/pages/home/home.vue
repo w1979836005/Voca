@@ -11,7 +11,12 @@
 
 			<!-- 右上角：词单切换图标（点击弹出选择弹窗） -->
 			<view class="wordlist-switch" @click="switchWordList">
-				<wd-icon name="list" size="24" color="#000000"></wd-icon>
+				<wd-icon
+					name="arrow-down"
+					size="24"
+					color="#000000"
+					:class="{ 'icon-rotated': isIconRotated }"
+				></wd-icon>
 			</view>
 		</view>
 
@@ -109,7 +114,7 @@
 		</view>
 
 		<!-- 名人名言 -->
-		<view class="quote-section">
+		<view class="quote-section" @click="changeQuote">
 			<view class="quote-icon">"</view>
 			<text class="quote-text">{{ currentQuote.text }}</text>
 			<text class="quote-author">—— {{ currentQuote.author }}</text>
@@ -142,21 +147,32 @@
 	<custom-tabbar />
 
 	<!-- 词单选择弹窗 -->
-		<wd-popup v-model="showWordListPopup" position="bottom" custom-style="border-radius: 24rpx 24rpx 0 0;">
+		<wd-popup
+			v-model="showWordListPopup"
+			position="left"
+			custom-style="background: rgba(0,0,0,0.5); z-index: 2000;"
+			@close="resetIconState"
+		>
 			<view class="wordlist-popup">
 				<view class="popup-header">
 					<text class="popup-title">选择词单</text>
-					<wd-icon name="cross" size="24" color="#666666" @click="showWordListPopup = false"></wd-icon>
+					<wd-icon name="cross" size="24" color="#666666" @click="closeWordListPopup"></wd-icon>
 				</view>
 				<view class="wordlist-list">
 					<view
 						class="wordlist-item"
+						:class="{ 'wordlist-item-current': item.name === currentWordlist }"
 						v-for="(item, index) in wordLists"
 						:key="index"
 						@click="selectWordList(item)"
 					>
-						<text class="item-name">{{ item.name }}</text>
-						<text class="item-count">{{ item.wordCount }} 词</text>
+						<view class="item-content">
+							<text class="item-name">{{ item.name }}</text>
+							<text class="item-count">{{ item.wordCount }} 词</text>
+						</view>
+						<view class="item-status" v-if="item.name === currentWordlist">
+							<wd-icon name="check" size="20" color="#4CAF50"></wd-icon>
+						</view>
 					</view>
 				</view>
 			</view>
@@ -171,7 +187,10 @@ import CustomTabbar from '@/components/custom-tabbar/custom-tabbar.vue'
 const userName = ref('ALEX')
 
 // 当前词单
-const currentWordlist = ref('CET-4核心词汇')
+const currentWordlist = computed(() => {
+	const current = allWordLists.find(item => item.id === currentWordlistId.value)
+	return current ? current.name : 'CET-4核心词汇'
+})
 
 // 学习进度数据
 const newWordsCount = ref(15)
@@ -207,14 +226,28 @@ const currentQuote = reactive({
 
 // 词单数据
 const showWordListPopup = ref(false)
-const wordLists = reactive([
-	{ name: 'CET-4核心词汇', wordCount: 4500 },
-	{ name: 'CET-6核心词汇', wordCount: 2500 },
-	{ name: '雅思核心词汇', wordCount: 3500 },
-	{ name: '托福核心词汇', wordCount: 3000 },
-	{ name: '商务英语词汇', wordCount: 2000 },
-	{ name: '日常口语词汇', wordCount: 1500 }
+const isIconRotated = ref(false)
+
+// 所有可用词单数据
+const allWordLists = reactive([
+	{ id: 'wordlist-1', name: 'CET-4核心词汇', wordCount: 4500 },
+	{ id: 'wordlist-2', name: 'CET-6核心词汇', wordCount: 2500 },
+	{ id: 'wordlist-3', name: '雅思核心词汇', wordCount: 3500 },
+	{ id: 'wordlist-4', name: '托福核心词汇', wordCount: 3000 },
+	{ id: 'wordlist-5', name: '商务英语词汇', wordCount: 2000 },
+	{ id: 'wordlist-6', name: '日常口语词汇', wordCount: 1500 }
 ])
+
+// 用户已加入的词单列表
+const myWordlistIds = ref(['wordlist-1', 'wordlist-3', 'wordlist-5'])
+
+// 当前词单ID
+const currentWordlistId = ref('wordlist-1')
+
+// 计算用户已加入的词单列表
+const wordLists = computed(() => {
+	return allWordLists.filter(item => myWordlistIds.value.includes(item.id))
+})
 
 // 获取问候语
 const getGreeting = () => {
@@ -235,6 +268,22 @@ const getRandomQuote = () => {
 	currentQuote.author = quote.author
 }
 
+// 点击切换名言
+const changeQuote = () => {
+	// 获取当前名言的索引，避免显示相同的名言
+	let currentIndex = quotes.findIndex(quote => quote.text === currentQuote.text && quote.author === currentQuote.author)
+	let randomIndex
+
+	// 确保获取到不同的名言
+	do {
+		randomIndex = Math.floor(Math.random() * quotes.length)
+	} while (randomIndex === currentIndex && quotes.length > 1)
+
+	const quote = quotes[randomIndex]
+	currentQuote.text = quote.text
+	currentQuote.author = quote.author
+}
+
 // 跳转到词单详情
 const goToWordList = () => {
 	uni.navigateTo({
@@ -244,13 +293,28 @@ const goToWordList = () => {
 
 // 切换词单 - 显示弹窗选择
 const switchWordList = () => {
+	console.log('switchWordList clicked')
+	isIconRotated.value = !isIconRotated.value
+	console.log('isIconRotated:', isIconRotated.value)
 	showWordListPopup.value = true
+}
+
+// 重置图标状态
+const resetIconState = () => {
+	isIconRotated.value = false
+}
+
+// 关闭词单弹窗
+const closeWordListPopup = () => {
+	showWordListPopup.value = false
+	isIconRotated.value = false
 }
 
 // 选择词单
 const selectWordList = (item: any) => {
 	currentWordlist.value = item.name
 	showWordListPopup.value = false
+	isIconRotated.value = false
 
 	// 重新加载该词单的学习数据
 	loadWordlistProgress()
@@ -355,6 +419,21 @@ page {
 	&:active {
 		opacity: 0.7;
 	}
+}
+
+.icon-rotated {
+	display: inline-block;
+	transform: rotate(180deg);
+	transition: transform 0.3s ease;
+}
+
+/* 提升弹窗层级 */
+:deep(.wd-popup) {
+	z-index: 2000 !important;
+}
+
+:deep(.wd-popup__content) {
+	z-index: 2001 !important;
 }
 
 /* 问候语部分 */
@@ -498,6 +577,13 @@ page {
 	text-align: center;
 	position: relative;
 	border: 1px solid #f0f0f0;
+	cursor: pointer;
+	transition: all 0.3s ease;
+
+	&:active {
+		background: #e9ecef;
+		transform: scale(0.98);
+	}
 
 	.quote-icon {
 		font-family: $voca-primary-font;
@@ -560,17 +646,20 @@ page {
 
 /* 词单弹窗 */
 .wordlist-popup {
-	padding: 40rpx 0;
+	width: 500rpx;
+	height: 100vh;
 	background: #ffffff;
-	border-radius: 24rpx 24rpx 0 0;
-	max-height: 80vh;
+	display: flex;
+	flex-direction: column;
+	position: relative;
+	z-index: 2001;
 }
 
 .popup-header {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	padding: 0 40rpx 30rpx 40rpx;
+	padding: 40rpx 40rpx 30rpx 40rpx;
 	border-bottom: 1px solid #f0f0f0;
 
 	.popup-title {
@@ -578,12 +667,14 @@ page {
 		font-weight: $font-weight-bold;
 		font-size: 32rpx;
 		color: #2c3e50;
+		margin-top: 20rpx;
 	}
 }
 
 .wordlist-list {
-	max-height: 60vh;
+	flex: 1;
 	overflow-y: auto;
+	padding-bottom: 120rpx; /* 为tabbar留出空间 */
 }
 
 .wordlist-item {
@@ -593,22 +684,58 @@ page {
 	padding: 30rpx 40rpx;
 	border-bottom: 1px solid #f8f9fa;
 	cursor: pointer;
-	transition: background-color 0.3s ease;
+	transition: all 0.3s ease;
+	position: relative;
 
 	&:active {
 		background-color: #f8f9fa;
+	}
+
+	/* 当前选中词单的特殊效果 */
+	&.wordlist-item-current {
+		/* 保持原有的普通背景，不添加特殊背景色 */
+		box-shadow: none;
+
+		&:active {
+			background-color: #f8f9fa;
+		}
+	}
+
+	.item-content {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		gap: 8rpx;
 	}
 
 	.item-name {
 		font-family: $voca-primary-font;
 		font-size: 28rpx;
 		color: #2c3e50;
+		font-weight: 500;
+
+		.wordlist-item-current & {
+			font-weight: 600;
+			/* 保持原有颜色 */
+		}
 	}
 
 	.item-count {
 		font-family: $voca-primary-font;
 		font-size: 24rpx;
 		color: #666666;
+
+		.wordlist-item-current & {
+			/* 保持原有颜色 */
+		}
+	}
+
+	.item-status {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 40rpx;
+		height: 40rpx;
 	}
 }
 </style>

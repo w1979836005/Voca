@@ -50,6 +50,41 @@
 			}
 		},
 		{
+			"path": "pages/profile/edit-profile",
+			"style": {
+				"navigationBarTitleText": "",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/profile/statistics",
+			"style": {
+				"navigationBarTitleText": "",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/profile/wordlist-manage",
+			"style": {
+				"navigationBarTitleText": "",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/translate/translate",
+			"style": {
+				"navigationBarTitleText": "",
+				"navigationStyle": "custom"
+			}
+		},
+		{
+			"path": "pages/learning/learning",
+			"style": {
+				"navigationBarTitleText": "",
+				"navigationStyle": "custom"
+			}
+		},
+		{
 			"path": "pages/index/index",
 			"style": {
 				"navigationBarTitleText": "uni-app"
@@ -71,20 +106,26 @@
 			{
 				"pagePath": "pages/home/home",
 				"text": "首页",
-				"iconPath": "/static/tabbar/主页.png",
-				"selectedIconPath": "/static/tabbar/主页 (1).png"
+				"iconPath": "/static/tabbar/home.png",
+				"selectedIconPath": "/static/tabbar/home-active.png"
 			},
 			{
 				"pagePath": "pages/wordlist/wordlist",
 				"text": "词单",
-				"iconPath": "/static/tabbar/词单.png",
-				"selectedIconPath": "/static/tabbar/词单(1).png"
+				"iconPath": "/static/tabbar/wordlist.png",
+				"selectedIconPath": "/static/tabbar/wordlist-active.png"
+			},
+			{
+				"pagePath": "pages/translate/translate",
+				"text": "翻译",
+				"iconPath": "/static/tabbar/search.png",
+				"selectedIconPath": "/static/tabbar/search-active.png"
 			},
 			{
 				"pagePath": "pages/profile/profile",
 				"text": "我的",
-				"iconPath": "/static/tabbar/用户.png",
-				"selectedIconPath": "/static/tabbar/用户 (1).png"
+				"iconPath": "/static/tabbar/profile.png",
+				"selectedIconPath": "/static/tabbar/profile-active.png"
 			}
 		]
 	},

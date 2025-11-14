@@ -1,78 +1,149 @@
 <template>
 	<view class="profile-container">
-		<!-- 用户信息头部 -->
-		<view class="profile-header">
+		<!-- 用户信息卡片 -->
+		<view class="user-card">
+			<view class="user-avatar-section">
+				<view class="user-avatar">
+					<text class="avatar-text">{{ getAvatarText(userInfo.username) }}</text>
+				</view>
+				<view class="user-level">
+					<text class="level-text">{{ getUserLevel() }}</text>
+				</view>
+			</view>
 			<view class="user-info">
-				<view class="avatar-section">
-					<view class="avatar">
-						<image
-							class="avatar-img"
-							src="/static/logo.png"
-							mode="aspectFit"
-						></image>
-					</view>
-				</view>
-				<view class="user-details">
-					<text class="username">{{ userInfo.username }}</text>
-					<text class="email">{{ userInfo.email }}</text>
-					<text class="join-date">加入时间：{{ userInfo.joinDate }}</text>
-				</view>
+				<text class="username">{{ userInfo.username }}</text>
+				<text class="user-email">{{ userInfo.email }}</text>
+				<text class="join-date">{{ formatJoinDate(userInfo.joinDate) }}</text>
+			</view>
+			<!-- 编辑按钮 -->
+			<view class="edit-button" @click="editUserInfo">
+				<wd-icon name="edit" size="20" color="#666666"></wd-icon>
 			</view>
 		</view>
 
-		<!-- 学习统计 -->
-		<view class="stats-section">
-			<view class="section-title">
-				<text class="title-text">学习统计</text>
+		<!-- 学习数据统计 -->
+		<view class="stats-overview">
+			<view class="stats-header">
+				<text class="section-title">学习数据</text>
+				<view class="view-details" @click="showDetailedStats">
+					<text class="details-text">查看详情</text>
+					<wd-icon name="arrow-right" size="16" color="#666666"></wd-icon>
+				</view>
 			</view>
-			<view class="stats-grid">
-				<view class="stat-card">
-					<view class="stat-number">{{ stats.totalWords }}</view>
+			<view class="stats-cards">
+				<view class="stat-item" @click="showWordStats">
+					<view class="stat-number">{{ stats.totalWords.toLocaleString() }}</view>
 					<text class="stat-label">总学习词数</text>
 				</view>
-				<view class="stat-card">
+				<view class="stat-divider"></view>
+				<view class="stat-item" @click="showTodayStats">
 					<view class="stat-number">{{ stats.todayLearned }}</view>
 					<text class="stat-label">今日学习</text>
 				</view>
-				<view class="stat-card">
-					<view class="stat-number">{{ stats.totalDays }}</view>
-					<text class="stat-label">学习天数</text>
-				</view>
-				<view class="stat-card">
+				<view class="stat-divider"></view>
+				<view class="stat-item" @click="showStreakStats">
 					<view class="stat-number">{{ stats.continuousDays }}</view>
-					<text class="stat-label">连续学习</text>
+					<text class="stat-label">连续学习(天)</text>
 				</view>
 			</view>
 		</view>
 
-		<!-- 学习成就 -->
-		<view class="achievements-section">
-			<view class="section-title">
-				<text class="title-text">学习成就</text>
+		<!-- 学习进度 -->
+		<view class="progress-section">
+			<view class="progress-header">
+				<text class="section-title">学习进度</text>
 			</view>
-			<view class="achievements-grid">
-				<view
-					class="achievement-item"
-					v-for="(achievement, index) in achievements"
-					:key="index"
-					:class="{ 'achievement-unlocked': achievement.unlocked }"
-				>
-					<view class="achievement-icon">{{ achievement.icon }}</view>
-					<view class="achievement-info">
-						<text class="achievement-name">{{ achievement.name }}</text>
-						<text class="achievement-desc">{{ achievement.description }}</text>
+			<view class="progress-content">
+				<view class="overall-progress">
+					<view class="progress-info">
+						<text class="progress-title">今日目标</text>
+						<text class="progress-text">{{ stats.todayLearned }}/{{ stats.dailyGoal }}</text>
+					</view>
+					<view class="progress-bar">
+						<view
+							class="progress-fill"
+							:style="{ width: (stats.todayLearned / stats.dailyGoal * 100) + '%' }"
+						></view>
+					</view>
+				</view>
+				<view class="week-progress">
+					<text class="week-title">本周进度</text>
+					<view class="week-chart">
+						<view
+							class="day-item"
+							v-for="(day, index) in weekData"
+							:key="index"
+						>
+							<view class="day-label">{{ day.label }}</view>
+							<view class="day-progress">
+								<view
+									class="day-fill"
+									:style="{ height: day.percentage + '%' }"
+								></view>
+							</view>
+						</view>
 					</view>
 				</view>
 			</view>
+		</view>
+
+		<!-- 成就徽章 -->
+		<view class="achievements-section">
+			<view class="section-header">
+				<text class="section-title">学习成就</text>
+				<view class="achievement-count">
+					<text class="count-text">{{ unlockedAchievements.length }}/{{ achievements.length }}</text>
+				</view>
+			</view>
+			<scroll-view class="achievements-scroll" scroll-x>
+				<view class="achievements-list">
+					<view
+						class="achievement-badge"
+						v-for="(achievement, index) in achievements"
+						:key="index"
+						:class="{ 'badge-unlocked': achievement.unlocked }"
+						@click="showAchievementDetail(achievement)"
+					>
+						<view class="badge-icon">{{ achievement.icon }}</view>
+						<text class="badge-name">{{ achievement.name }}</text>
+						<view class="badge-progress">
+							<text class="badge-status">
+								{{ achievement.unlocked ? '已获得' : achievement.progress + '%' }}
+							</text>
+						</view>
+					</view>
+				</view>
+			</scroll-view>
 		</view>
 
 		<!-- 功能菜单 -->
 		<view class="menu-section">
-			<view class="section-title">
-				<text class="title-text">设置与帮助</text>
+			<view class="menu-group">
+				<view class="menu-item" @click="manageWordlist">
+					<view class="menu-icon">
+						<wd-icon name="list" size="24" color="#000000"></wd-icon>
+					</view>
+					<view class="menu-content">
+						<text class="menu-title">词单管理</text>
+						<text class="menu-desc">管理我的学习词单</text>
+					</view>
+					<view class="menu-badge">
+						<text class="badge-text">{{ myWordlistCount }}</text>
+					</view>
+				</view>
+				<view class="menu-item" @click="showLearningHistory">
+					<view class="menu-icon">
+						<wd-icon name="clock" size="24" color="#000000"></wd-icon>
+					</view>
+					<view class="menu-content">
+						<text class="menu-title">学习历史</text>
+						<text class="menu-desc">查看学习记录</text>
+					</view>
+				</view>
 			</view>
-			<view class="menu-list">
-				<view class="menu-item" @click="goToSettings">
+
+			<view class="menu-group">
+				<view class="menu-item" @click="showSettings">
 					<view class="menu-icon">
 						<wd-icon name="setting" size="24" color="#000000"></wd-icon>
 					</view>
@@ -80,37 +151,7 @@
 						<text class="menu-title">设置</text>
 						<text class="menu-desc">个性化设置</text>
 					</view>
-					<view class="menu-arrow">
-						<wd-icon name="arrow-right" size="16" color="#cccccc"></wd-icon>
-					</view>
 				</view>
-
-				<view class="menu-item" @click="showStatistics">
-					<view class="menu-icon">
-						<wd-icon name="chart" size="24" color="#000000"></wd-icon>
-					</view>
-					<view class="menu-content">
-						<text class="menu-title">学习统计</text>
-						<text class="menu-desc">详细数据分析</text>
-					</view>
-					<view class="menu-arrow">
-						<wd-icon name="arrow-right" size="16" color="#cccccc"></wd-icon>
-					</view>
-				</view>
-
-				<view class="menu-item" @click="showBackup">
-					<view class="menu-icon">
-						<wd-icon name="cloud" size="24" color="#000000"></wd-icon>
-					</view>
-					<view class="menu-content">
-						<text class="menu-title">数据备份</text>
-						<text class="menu-desc">云端同步学习进度</text>
-					</view>
-					<view class="menu-arrow">
-						<wd-icon name="arrow-right" size="16" color="#cccccc"></wd-icon>
-					</view>
-				</view>
-
 				<view class="menu-item" @click="showHelp">
 					<view class="menu-icon">
 						<wd-icon name="question" size="24" color="#000000"></wd-icon>
@@ -119,8 +160,14 @@
 						<text class="menu-title">帮助中心</text>
 						<text class="menu-desc">使用指南和常见问题</text>
 					</view>
-					<view class="menu-arrow">
-						<wd-icon name="arrow-right" size="16" color="#cccccc"></wd-icon>
+				</view>
+				<view class="menu-item" @click="showAbout">
+					<view class="menu-icon">
+						<wd-icon name="info" size="24" color="#000000"></wd-icon>
+					</view>
+					<view class="menu-content">
+						<text class="menu-title">关于</text>
+						<text class="menu-desc">版本信息</text>
 					</view>
 				</view>
 			</view>
@@ -138,11 +185,15 @@
 				退出登录
 			</wd-button>
 		</view>
+
+		<!-- 自定义TabBar -->
+		<custom-tabbar />
 	</view>
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, onMounted } from 'vue'
+import { reactive, ref, computed, onMounted } from 'vue'
+import CustomTabbar from '@/components/custom-tabbar/custom-tabbar.vue'
 
 // 用户信息
 const userInfo = reactive({
@@ -156,121 +207,217 @@ const stats = reactive({
 	totalWords: 6845,
 	todayLearned: 25,
 	totalDays: 127,
-	continuousDays: 15
+	continuousDays: 15,
+	dailyGoal: 50
 })
+
+// 本周学习数据
+const weekData = reactive([
+	{ label: '一', percentage: 80 },
+	{ label: '二', percentage: 100 },
+	{ label: '三', percentage: 60 },
+	{ label: '四', percentage: 90 },
+	{ label: '五', percentage: 70 },
+	{ label: '六', percentage: 100 },
+	{ label: '日', percentage: 50 }
+])
 
 // 学习成就
 const achievements = reactive([
 	{
+		id: 1,
 		name: '初学者',
 		description: '开始学习之旅',
 		icon: '🌱',
-		unlocked: true
+		unlocked: true,
+		progress: 100
 	},
 	{
+		id: 2,
 		name: '坚持者',
 		description: '连续学习7天',
 		icon: '🔥',
-		unlocked: true
+		unlocked: true,
+		progress: 100
 	},
 	{
+		id: 3,
 		name: '词汇达人',
 		description: '学习1000个单词',
 		icon: '📚',
-		unlocked: true
+		unlocked: true,
+		progress: 100
 	},
 	{
+		id: 4,
 		name: '学霸',
 		description: '学习5000个单词',
 		icon: '🎓',
-		unlocked: true
+		unlocked: true,
+		progress: 100
 	},
 	{
+		id: 5,
 		name: '词汇大师',
 		description: '学习10000个单词',
 		icon: '🏆',
-		unlocked: false
+		unlocked: false,
+		progress: 68
 	},
 	{
+		id: 6,
 		name: '学习专家',
-		description: '连续学习30天',
-		icon: '⭐',
-		unlocked: false
+		description: '学习365天不间断',
+		icon: '💪',
+		unlocked: false,
+		progress: 35
 	}
 ])
 
-// 跳转到设置页面
-const goToSettings = () => {
+// 我的词单数量
+const myWordlistCount = ref(5)
+
+// 计算已解锁的成就
+const unlockedAchievements = computed(() => {
+	return achievements.filter(item => item.unlocked)
+})
+
+// 获取头像文字
+const getAvatarText = (username: string) => {
+	if (username.length >= 2) {
+		return username.substring(0, 2).toUpperCase()
+	}
+	return username.toUpperCase()
+}
+
+// 获取用户等级
+const getUserLevel = () => {
+	const totalWords = stats.totalWords
+	if (totalWords < 1000) return '初学者'
+	if (totalWords < 3000) return '进阶者'
+	if (totalWords < 6000) return '熟练者'
+	if (totalWords < 10000) return '专家'
+	return '大师'
+}
+
+// 格式化加入日期
+const formatJoinDate = (date: string) => {
+	const joinDate = new Date(date)
+	const now = new Date()
+	const diffTime = Math.abs(now.getTime() - joinDate.getTime())
+	const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+	return `加入${diffDays}天`
+}
+
+// 显示详细统计
+const showDetailedStats = () => {
+	// 跳转到学习数据详情页面
 	uni.navigateTo({
-		url: '/pages/settings/settings'
+		url: '/pages/profile/statistics'
 	})
 }
 
-// 显示统计详情
-const showStatistics = () => {
+// 显示单词统计
+const showWordStats = () => {
+	uni.navigateTo({
+		url: '/pages/statistics/words'
+	})
+}
+
+// 显示今日统计
+const showTodayStats = () => {
+	uni.navigateTo({
+		url: '/pages/statistics/today'
+	})
+}
+
+// 显示连续学习统计
+const showStreakStats = () => {
+	uni.navigateTo({
+		url: '/pages/statistics/streak'
+	})
+}
+
+// 显示成就详情
+const showAchievementDetail = (achievement: any) => {
 	uni.showModal({
-		title: '学习统计详情',
-		content: '即将为您展示详细的学习数据分析',
+		title: achievement.name,
+		content: `${achievement.icon} ${achievement.description}\n进度：${achievement.unlocked ? '已完成' : achievement.progress + '%'}`,
 		showCancel: false
 	})
 }
 
-// 显示备份选项
-const showBackup = () => {
-	uni.showActionSheet({
-		itemList: [
-			{
-				text: '备份到云端',
-				color: '#007aff'
-			},
-			{
-				text: '从云端恢复',
-				color: '#007aff'
-			}
-		],
-		success: (res) => {
-			uni.showToast({
-				title: res.tapIndex === 0 ? '开始备份' : '开始恢复',
-				icon: 'success'
-			})
-		}
+// 管理词单
+const manageWordlist = () => {
+	uni.navigateTo({
+		url: '/pages/profile/wordlist-manage'
 	})
 }
 
-// 显示帮助中心
+// 显示学习历史
+const showLearningHistory = () => {
+	uni.navigateTo({
+		url: '/pages/history/learning'
+	})
+}
+
+// 显示设置
+const showSettings = () => {
+	uni.navigateTo({
+		url: '/pages/settings/profile'
+	})
+}
+
+// 显示帮助
 const showHelp = () => {
+	uni.navigateTo({
+		url: '/pages/help/index'
+	})
+}
+
+// 显示关于
+const showAbout = () => {
 	uni.showModal({
-		title: '帮助中心',
-		content: '欢迎查看Voca使用指南和常见问题解答',
+		title: '关于Voca',
+		content: '版本：1.0.0\n一款专注于词汇学习的应用',
 		showCancel: false
 	})
 }
 
-// 显示退出登录确认
+// 编辑用户信息
+const editUserInfo = () => {
+	// 直接跳转到用户信息编辑页面
+	uni.navigateTo({
+		url: '/pages/profile/edit-profile'
+	})
+}
+
+// 显示退出确认
 const showLogoutConfirm = () => {
 	uni.showModal({
 		title: '退出登录',
 		content: '确定要退出登录吗？',
-		success: () => {
-			// 清除登录状态
-			// 这里可以调用登出API
+		success: (res) => {
+			if (res.confirm) {
+				uni.showLoading({
+					title: '退出中...'
+				})
 
-			// 跳转到登录页面
-			uni.reLaunch({
-				url: '/pages/login/login'
-			})
-
-			uni.showToast({
-				title: '已退出登录',
-				icon: 'success'
-			})
+				setTimeout(() => {
+					uni.hideLoading()
+					uni.reLaunch({
+						url: '/pages/login/login'
+					})
+				}, 1500)
+			}
 		}
 	})
 }
 
-// 页面加载时
+// 页面加载时初始化
 onMounted(() => {
-	console.log('我的页面加载完成')
+	// 可以在这里加载用户数据
+	console.log('个人页面加载完成')
 })
 </script>
 
@@ -281,192 +428,385 @@ page {
 }
 
 .profile-container {
-	padding: 40rpx;
-	min-height: 100vh;
-	padding-bottom: 120rpx; /* 为tabbar留出空间 */
+	height: 100vh;
+	padding: 40rpx 30rpx 140rpx 30rpx;
+	display: flex;
+	flex-direction: column;
+	gap: 24rpx;
+	box-sizing: border-box;
 }
 
-/* 用户信息头部 */
-.profile-header {
+/* 用户信息卡片 */
+.user-card {
 	background: #ffffff;
 	border-radius: 24rpx;
 	padding: 40rpx;
-	margin-bottom: 40rpx;
-	box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.1);
+	box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.08);
 	border: 1px solid #f0f0f0;
 	display: flex;
 	align-items: center;
 	gap: 30rpx;
+	position: relative; /* 为编辑按钮定位提供参考 */
 }
 
-.avatar-section {
-	flex-shrink: 0;
-}
-
-.avatar {
-	width: 100rpx;
-	height: 100rpx;
-	border-radius: 50rpx;
+/* 编辑按钮 */
+.edit-button {
+	position: absolute;
+	right: 30rpx;
+	bottom: 30rpx;
+	width: 60rpx;
+	height: 60rpx;
 	background: #f8f9fa;
+	border-radius: 50%;
 	display: flex;
-	justify-content: center;
 	align-items: center;
-	overflow: hidden;
+	justify-content: center;
+	cursor: pointer;
+	transition: all 0.3s ease;
+
+	&:active {
+		background: #e9ecef;
+		transform: scale(0.95);
+	}
 }
 
-.avatar-img {
-	width: 80rpx;
-	height: 80rpx;
-	border-radius: 40rpx;
-}
-
-.user-details {
-	flex: 1;
+.user-avatar-section {
+	position: relative;
 	display: flex;
 	flex-direction: column;
-	gap: 8rpx;
+	align-items: center;
+}
+
+.user-avatar {
+	width: 100rpx;
+	height: 100rpx;
+	border-radius: 50%;
+	background: #000000;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin-bottom: 12rpx;
+
+	.avatar-text {
+		color: #ffffff;
+		font-size: 32rpx;
+		font-weight: bold;
+	}
+}
+
+.user-level {
+	background: #f0f0f0;
+	border-radius: 12rpx;
+	padding: 6rpx 16rpx;
+
+	.level-text {
+		font-size: 20rpx;
+		color: #666666;
+		font-weight: 500;
+	}
+}
+
+.user-info {
+	flex: 1;
 }
 
 .username {
 	font-family: $voca-primary-font;
 	font-weight: $font-weight-bold;
-	font-size: 32rpx;
+	font-size: 36rpx;
 	color: #000000;
+	margin-bottom: 8rpx;
+	display: block;
 }
 
-.email {
-	font-family: $voca-primary-font;
+.user-email {
+	font-family: $voca-secondary-font;
 	font-size: 26rpx;
 	color: #666666;
+	margin-bottom: 8rpx;
+	display: block;
 }
 
 .join-date {
-	font-family: $voca-primary-font;
+	font-family: $voca-secondary-font;
 	font-size: 24rpx;
 	color: #999999;
+	display: block;
 }
 
-/* 统计部分 */
-.stats-section {
-	margin-bottom: 40rpx;
+/* 学习数据统计 */
+.stats-overview {
+	background: #ffffff;
+	border-radius: 24rpx;
+	padding: 30rpx;
+	box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.08);
+	border: 1px solid #f0f0f0;
 }
 
-.section-title {
+.stats-header {
 	display: flex;
+	justify-content: space-between;
 	align-items: center;
-	margin-bottom: 30rpx;
+	margin-bottom: 24rpx;
 
-	.title-text {
+	.section-title {
 		font-family: $voca-primary-font;
-		font-weight: $font-weight-medium;
-		font-size: 32rpx;
+		font-weight: $font-weight-bold;
+		font-size: 28rpx;
 		color: #000000;
 	}
 }
 
-.stats-grid {
-	display: grid;
-	grid-template-columns: repeat(2, 1fr);
-	gap: 20rpx;
-}
+.view-details {
+	display: flex;
+	align-items: center;
+	gap: 8rpx;
+	cursor: pointer;
 
-.stat-card {
-	background: #ffffff;
-	border-radius: 16rpx;
-	padding: 30rpx;
-	text-align: center;
-	box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.1);
-	border: 1px solid #f0f0f0;
-}
-
-.stat-number {
-	font-family: $voca-primary-font;
-	font-weight: $font-weight-bold;
-	font-size: 36rpx;
-	color: #000000;
-	margin-bottom: 8rpx;
-}
-
-.stat-label {
-	font-family: $voca-primary-font;
-	font-size: 24rpx;
-	color: #666666;
-}
-
-/* 成就部分 */
-.achievements-section {
-	margin-bottom: 40rpx;
-}
-
-.achievements-grid {
-	display: grid;
-	grid-template-columns: repeat(2, 1fr);
-	gap: 20rpx;
-}
-
-.achievement-item {
-	background: #ffffff;
-	border-radius: 16rpx;
-	padding: 30rpx;
-	text-align: center;
-	box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.1);
-	border: 1px solid #f0f0f0;
-	opacity: 0.6;
-	transition: all 0.3s ease;
-
-	&.achievement-unlocked {
-		opacity: 1;
+	.details-text {
+		font-family: $voca-secondary-font;
+		font-size: 24rpx;
+		color: #666666;
 	}
 }
 
-.achievement-icon {
-	font-size: 40rpx;
-	line-height: 1;
-	margin-bottom: 12rpx;
+.stats-cards {
+	display: flex;
+	align-items: center;
+	justify-content: space-around;
 }
 
-.achievement-info {
+.stat-item {
 	display: flex;
 	flex-direction: column;
-	gap: 4rpx;
+	align-items: center;
+	flex: 1;
+	cursor: pointer;
+
+	.stat-number {
+		font-family: $voca-primary-font;
+		font-weight: $font-weight-bold;
+		font-size: 40rpx;
+		color: #000000;
+		margin-bottom: 8rpx;
+	}
+
+	.stat-label {
+		font-family: $voca-secondary-font;
+		font-size: 22rpx;
+		color: #666666;
+	}
 }
 
-.achievement-name {
-	font-family: $voca-primary-font;
-	font-weight: $font-weight-medium;
-	font-size: 26rpx;
-	color: #333333;
+.stat-divider {
+	width: 1px;
+	height: 60rpx;
+	background: #e9ecef;
 }
 
-.achievement-desc {
+/* 学习进度 */
+.progress-section {
+	background: #ffffff;
+	border-radius: 24rpx;
+	padding: 30rpx;
+	box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.08);
+	border: 1px solid #f0f0f0;
+}
+
+.progress-header {
+	margin-bottom: 24rpx;
+}
+
+.overall-progress {
+	margin-bottom: 32rpx;
+}
+
+.progress-info {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 16rpx;
+
+	.progress-title {
+		font-family: $voca-primary-font;
+		font-size: 26rpx;
+		color: #000000;
+	}
+
+	.progress-text {
+		font-family: $voca-primary-font;
+		font-weight: $font-weight-medium;
+		font-size: 26rpx;
+		color: #000000;
+	}
+}
+
+.progress-bar {
+	width: 100%;
+	height: 8rpx;
+	background: #f0f0f0;
+	border-radius: 4rpx;
+	overflow: hidden;
+
+	.progress-fill {
+		height: 100%;
+		background: #000000;
+		border-radius: 4rpx;
+		transition: width 0.3s ease;
+	}
+}
+
+.week-progress {
+	.week-title {
+		font-family: $voca-primary-font;
+		font-size: 26rpx;
+		color: #000000;
+		margin-bottom: 20rpx;
+		display: block;
+	}
+}
+
+.week-chart {
+	display: flex;
+	align-items: flex-end;
+	justify-content: space-between;
+	height: 80rpx;
+	padding: 0 20rpx;
+}
+
+.day-item {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	flex: 1;
+
+	.day-label {
+		font-family: $voca-secondary-font;
+		font-size: 20rpx;
+		color: #666666;
+		margin-bottom: 12rpx;
+	}
+}
+
+.day-progress {
+	width: 20rpx;
+	height: 40rpx;
+	background: #f0f0f0;
+	border-radius: 4rpx;
+	position: relative;
+	overflow: hidden;
+
+	.day-fill {
+		position: absolute;
+		bottom: 0;
+		left: 0;
+		width: 100%;
+		background: #000000;
+		border-radius: 4rpx;
+		transition: height 0.3s ease;
+	}
+}
+
+/* 成就徽章 */
+.achievements-section {
+	background: #ffffff;
+	border-radius: 24rpx;
+	padding: 30rpx;
+	box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.08);
+	border: 1px solid #f0f0f0;
+}
+
+.section-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 24rpx;
+
+	.achievement-count {
+		.count-text {
+			font-family: $voca-secondary-font;
+			font-size: 24rpx;
+			color: #666666;
+		}
+	}
+}
+
+.achievements-scroll {
+	margin: 0 -10rpx;
+}
+
+.achievements-list {
+	display: flex;
+	gap: 16rpx;
+	padding: 0 10rpx;
+}
+
+.achievement-badge {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	min-width: 120rpx;
+	padding: 20rpx 16rpx;
+	background: #f8f9fa;
+	border-radius: 16rpx;
+	border: 2rpx solid #e9ecef;
+	transition: all 0.3s ease;
+	cursor: pointer;
+
+	&.badge-unlocked {
+		background: #ffffff;
+		border-color: #000000;
+	}
+
+	&:active {
+		transform: scale(0.95);
+	}
+}
+
+.badge-icon {
+	font-size: 32rpx;
+	margin-bottom: 8rpx;
+}
+
+.badge-name {
 	font-family: $voca-primary-font;
 	font-size: 22rpx;
-	color: #666666;
+	color: #000000;
+	margin-bottom: 8rpx;
+	text-align: center;
+	font-weight: 500;
 }
 
-/* 菜单部分 */
+.badge-progress {
+	.badge-status {
+		font-family: $voca-secondary-font;
+		font-size: 20rpx;
+		color: #666666;
+	}
+}
+
+/* 功能菜单 */
 .menu-section {
-	margin-bottom: 40rpx;
+	background: #ffffff;
+	border-radius: 24rpx;
+	box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.08);
+	border: 1px solid #f0f0f0;
+	overflow: hidden;
 }
 
-.menu-list {
-	background: #ffffff;
-	border-radius: 16rpx;
-	overflow: hidden;
-	box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.1);
-	border: 1px solid #f0f0f0;
+.menu-group {
+	&:not(:last-child) {
+		border-bottom: 1px solid #f0f0f0;
+	}
 }
 
 .menu-item {
 	display: flex;
 	align-items: center;
-	padding: 30rpx;
-	border-bottom: 1px solid #f8f9fa;
+	padding: 35rpx 30rpx;
 	transition: background-color 0.3s ease;
-
-	&:last-child {
-		border-bottom: none;
-	}
+	cursor: pointer;
+	min-height: 120rpx;
 
 	&:active {
 		background-color: #f8f9fa;
@@ -474,62 +814,61 @@ page {
 }
 
 .menu-icon {
-	width: 60rpx;
-	height: 60rpx;
-	border-radius: 30rpx;
-	background: #f8f9fa;
-	display: flex;
-	justify-content: center;
-	align-items: center;
+	width: 48rpx;
+	height: 48rpx;
 	margin-right: 20rpx;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }
 
 .menu-content {
 	flex: 1;
-	display: flex;
-	flex-direction: column;
-	gap: 4rpx;
+
+	.menu-title {
+		font-family: $voca-primary-font;
+		font-size: 28rpx;
+		color: #000000;
+		margin-bottom: 4rpx;
+		display: block;
+	}
+
+	.menu-desc {
+		font-family: $voca-secondary-font;
+		font-size: 22rpx;
+		color: #666666;
+		display: block;
+	}
 }
 
-.menu-title {
-	font-family: $voca-primary-font;
-	font-size: 28rpx;
-	font-weight: $font-weight-medium;
-	color: #333333;
+.menu-badge {
+	background: #000000;
+	border-radius: 12rpx;
+	padding: 4rpx 12rpx;
+	margin-left: 16rpx;
+
+	.badge-text {
+		font-family: $voca-primary-font;
+		font-size: 20rpx;
+		color: #ffffff;
+		font-weight: 500;
+	}
 }
 
-.menu-desc {
-	font-family: $voca-primary-font;
-	font-size: 24rpx;
-	color: #666666;
-}
-
-.menu-arrow {
-	width: 40rpx;
-	height: 40rpx;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-}
-
-/* 退出登录部分 */
+/* 退出登录 */
 .logout-section {
-	position: fixed;
-	bottom: 160rpx; /* 为tabbar留出空间 */
-	left: 40rpx;
-	right: 40rpx;
-	width: calc(100% - 80rpx);
-	max-width: 600rpx;
+	margin-top: auto;
+	padding-top: 20rpx;
 }
 
 .logout-btn {
-	height: 100rpx;
-	font-size: 32rpx;
+	height: 80rpx;
+	border-radius: 40rpx;
+	font-size: 28rpx;
 	font-family: $voca-primary-font;
 	font-weight: $font-weight-medium;
 	background: transparent !important;
 	border: 2px solid #000000 !important;
 	color: #000000 !important;
-	border-radius: 50rpx;
 }
 </style>
