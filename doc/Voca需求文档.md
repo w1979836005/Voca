@@ -161,3 +161,224 @@
 ---
 这份文档为你提供了从零到一构建 Voca App 的完整蓝图。祝你开发顺利！
 
+
+
+## 开发流程笔记
+
+### 数据库设计
+
+首页：
+
+![image-20251114215748274](assets/image-20251114215748274.png)
+
+
+
+词单页面：
+
+![image-20251114215800061](assets/image-20251114215800061.png)
+
+
+
+翻译页面：
+
+![image-20251114215810887](assets/image-20251114215810887.png)
+
+我的页面：
+
+![image-20251114215822943](assets/image-20251114215822943.png)
+
+
+
+1. 用户表
+
+   ```sql
+   表名： user 用户表
+   字段：
+   id 主键
+   username 用户名
+   userAccount 用户账户  -可选，无账户默认账户为邮箱（因为通过邮箱注册）
+   userAvatar 用户头像
+   userProfile 个人简洁
+   studyGoal 学习目标 -单词数量
+   email 邮箱
+   isBan 是否禁用当前用户 0-不禁用  1-禁用
+   role 用户角色 varchar  ’admin‘ ’user‘ 用户或者管理员
+   
+   isDelete 逻辑删除 0-未删除 1-删除
+   upDateTime 更新事件
+   createTime 创建时间
+   ```
+
+```sql
+CREATE TABLE user (
+  id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+  username VARCHAR(50) NOT NULL COMMENT '用户名',
+  userAccount VARCHAR(100) NULL COMMENT '用户账户',
+  userAvatar VARCHAR(255) NULL COMMENT '用户头像URL',
+  userProfile VARCHAR(512) NULL COMMENT '个人简介',
+  studyGoal INT DEFAULT 20 COMMENT '每日学习新词数量目标',
+  email VARCHAR(100) NOT NULL UNIQUE COMMENT '邮箱',
+  isBan TINYINT DEFAULT 0 COMMENT '是否禁用 0-否 1-是',
+  role VARCHAR(20) DEFAULT 'user' COMMENT '用户角色 admin/user',
+  currentWordListId BIGINT NULL COMMENT '当前选择的词库ID',
+  isDelete TINYINT DEFAULT 0 COMMENT '逻辑删除 0-未删除 1-删除',
+  createTime DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  updateTime DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (id),
+  INDEX idx_email (email)
+) COMMENT '用户表';
+
+```
+
+
+
+
+
+2.词单表
+
+```mysql
+表名： wordList 词单表
+字段：
+id 主键
+wordListName 词单名
+categories 词单分类
+description 词单描述
+
+isDelete 逻辑删除 0-未删除 1-删除
+upDateTime 更新事件
+createTime 创建时间
+```
+
+
+
+```sql
+CREATE TABLE wordList (
+  id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+  wordListName VARCHAR(100) NOT NULL COMMENT '词单名',
+  categories VARCHAR(50) NOT NULL COMMENT '词单分类 (如: cet4, toefl)',
+  description VARCHAR(512) NULL COMMENT '词单描述',
+  isSystemBuiltIn TINYINT DEFAULT 1 COMMENT '是否系统内置 1-是 0-否',
+  isDelete TINYINT DEFAULT 0 COMMENT '逻辑删除 0-未删除 1-删除',
+  createTime DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  updateTime DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (id),
+  INDEX idx_categories (categories)
+) COMMENT '词单表';
+
+```
+
+
+
+
+
+3. 单词总表
+
+```sql
+CREATE TABLE word (
+  id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+  word VARCHAR(100) NOT NULL UNIQUE COMMENT '单词',
+  phonetic VARCHAR(100) NULL COMMENT '音标',
+  definition TEXT NOT NULL COMMENT '释义',
+  translation TEXT NULL COMMENT '中文翻译',
+  exampleSentence TEXT NULL COMMENT '例句',
+  exampleSentenceTranslation TEXT NULL COMMENT '例句翻译',
+  audioUrl VARCHAR(255) NULL COMMENT '发音音频URL',
+  difficulty TINYINT DEFAULT 1 COMMENT '难度等级 1-5',
+  isDelete TINYINT DEFAULT 0 COMMENT '逻辑删除 0-未删除 1-删除',
+  createTime DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  updateTime DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_word (word)
+) COMMENT '单词总表';
+
+```
+
+
+
+
+
+4. 词单-词汇表
+
+```sql
+CREATE TABLE word_list_word (
+  id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+  wordListId BIGINT NOT NULL COMMENT '词单ID',
+  wordId BIGINT NOT NULL COMMENT '单词ID',
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_wordlist_word (wordListId, wordId),
+  FOREIGN KEY (wordListId) REFERENCES wordList(id),
+  FOREIGN KEY (wordId) REFERENCES word(id)
+) COMMENT '词单与单词的关联表';
+
+```
+
+
+
+汇总sql
+
+```sql
+
+
+CREATE TABLE user (
+  id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+  username VARCHAR(50) NOT NULL COMMENT '用户名',
+  userAccount VARCHAR(100) NULL COMMENT '用户账户',
+  userAvatar VARCHAR(255) NULL COMMENT '用户头像URL',
+  userProfile VARCHAR(512) NULL COMMENT '个人简介',
+  studyGoal INT DEFAULT 20 COMMENT '每日学习新词数量目标',
+  email VARCHAR(100) NOT NULL UNIQUE COMMENT '邮箱',
+  isBan TINYINT DEFAULT 0 COMMENT '是否禁用 0-否 1-是',
+  role VARCHAR(20) DEFAULT 'user' COMMENT '用户角色 admin/user',
+  currentWordListId BIGINT NULL COMMENT '当前选择的词库ID',
+  isDelete TINYINT DEFAULT 0 COMMENT '逻辑删除 0-未删除 1-删除',
+  createTime DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  updateTime DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (id),
+  INDEX idx_email (email)
+) COMMENT '用户表';
+
+
+CREATE TABLE wordList (
+  id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+  wordListName VARCHAR(100) NOT NULL COMMENT '词单名',
+  categories VARCHAR(50) NOT NULL COMMENT '词单分类 (如: cet4, toefl)',
+  description VARCHAR(512) NULL COMMENT '词单描述',
+  isSystemBuiltIn TINYINT DEFAULT 1 COMMENT '是否系统内置 1-是 0-否',
+  isDelete TINYINT DEFAULT 0 COMMENT '逻辑删除 0-未删除 1-删除',
+  createTime DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  updateTime DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (id),
+  INDEX idx_categories (categories)
+) COMMENT '词单表';
+
+
+CREATE TABLE word (
+  id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+  word VARCHAR(100) NOT NULL UNIQUE COMMENT '单词',
+  phonetic VARCHAR(100) NULL COMMENT '音标',
+  definition TEXT NOT NULL COMMENT '释义',
+  translation TEXT NULL COMMENT '中文翻译',
+  exampleSentence TEXT NULL COMMENT '例句',
+  exampleSentenceTranslation TEXT NULL COMMENT '例句翻译',
+  audioUrl VARCHAR(255) NULL COMMENT '发音音频URL',
+  difficulty TINYINT DEFAULT 1 COMMENT '难度等级 1-5',
+  isDelete TINYINT DEFAULT 0 COMMENT '逻辑删除 0-未删除 1-删除',
+  createTime DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  updateTime DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_word (word)
+) COMMENT '单词总表';
+
+
+CREATE TABLE word_list_word (
+  id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+  wordListId BIGINT NOT NULL COMMENT '词单ID',
+  wordId BIGINT NOT NULL COMMENT '单词ID',
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_wordlist_word (wordListId, wordId),
+  FOREIGN KEY (wordListId) REFERENCES wordList(id),
+  FOREIGN KEY (wordId) REFERENCES word(id)
+) COMMENT '词单与单词的关联表';
+
+```
+

@@ -52,7 +52,7 @@
 				>
 					{{ countdown > 0 ? `${countdown}s后重发` : '获取验证码' }}
 				</wd-button>
-			</view>
+					</view>
 
 			<!-- 密码 -->
 			<view class="input-group">
@@ -106,6 +106,8 @@
 
 <script setup lang="ts">
 import { reactive, computed, ref, onBeforeUnmount } from 'vue'
+import authAPI from '@/api/auth.js'
+import { auth, navigation, toast } from '@/utils/index.js'
 
 // 表单数据
 const formData = reactive({
@@ -122,7 +124,8 @@ const timer = ref<any>(null)
 
 // 检查是否可以发送验证码
 const canSendCode = computed(() => {
-	return formData.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)
+	const isValid = formData.email && /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email)
+	return isValid
 })
 
 // 检查是否可以注册
@@ -140,123 +143,132 @@ const canRegister = computed(() => {
 
 // 处理输入变化
 const handleChange = (value: string) => {
-	console.log('输入变化:', value)
+	// 可以在这里添加输入验证逻辑
+}
+
+// 倒计时函数
+const startCountdown = () => {
+	// 清除之前的定时器
+	if (timer.value) {
+		clearInterval(timer.value)
+		timer.value = null
+	}
+
+	countdown.value = 30
+
+	timer.value = setInterval(() => {
+		countdown.value--
+
+		if (countdown.value <= 0) {
+			clearInterval(timer.value!)
+			timer.value = null
+		}
+	}, 1000)
 }
 
 // 发送验证码
 const sendVerificationCode = async () => {
 	if (!canSendCode.value) {
-		uni.showToast({
-			title: '请输入正确的邮箱地址',
-			icon: 'none'
-		})
+		toast.error('请输入正确的邮箱地址')
 		return
 	}
 
 	try {
-		// 这里调用发送验证码的API
-		console.log('发送验证码到:', formData.email)
+		toast.loading('发送中...')
 
-		// 模拟API调用
-		uni.showLoading({
-			title: '发送中...'
+		// 调用发送验证码的API
+		const res = await authAPI.sendVerificationCode({
+			email: formData.email
 		})
 
-		// TODO: 替换为实际的API调用
-		// const res = await sendCodeApi(formData.email)
-
-		setTimeout(() => {
-			uni.hideLoading()
-			uni.showToast({
-				title: '验证码已发送',
-				icon: 'success'
-			})
+		if (res.success === true) {
+			toast.success('验证码已发送')
 
 			// 开始倒计时
-			countdown.value = 60
-			timer.value = setInterval(() => {
-				countdown.value--
-				if (countdown.value <= 0) {
-					clearInterval(timer.value!)
-					timer.value = null
-				}
-			}, 1000)
-		}, 1000)
-
+			startCountdown()
+		} else {
+			toast.error(res.message || '发送失败')
+		}
 	} catch (error) {
-		uni.hideLoading()
-		uni.showToast({
-			title: '发送失败，请重试',
-			icon: 'none'
-		})
+		console.error('发送验证码错误:', error)
+		toast.error('发送失败，请重试')
+	} finally {
+		toast.hideLoading()
 	}
 }
 
 // 处理注册
 const handleRegister = async () => {
-	console.log('点击注册按钮')
-	console.log('canRegister.value:', canRegister.value)
-	console.log('formData:', formData)
-
 	if (!canRegister.value) {
-		uni.showToast({
-			title: '请完善注册信息',
-			icon: 'none'
-		})
+		toast.error('请完善注册信息')
 		return
 	}
 
 	try {
-		uni.showLoading({
-			title: '注册中...'
-		})
+		toast.loading('注册中...')
 
 		// 处理用户名（如果为空则使用邮箱）
 		const username = formData.username || formData.email.split('@')[0]
 
-		// 准备注册数据
+		// 准备注册数据（包含确认密码）
 		const registerData = {
 			username: username,
 			email: formData.email,
 			password: formData.password,
+			confirmPassword: formData.confirmPassword,
 			code: formData.code
 		}
 
-		console.log('注册数据:', registerData)
+		// 调用注册API
+		console.log('准备调用注册API，数据:', registerData)
+		const res = await authAPI.register(registerData)
+		console.log('注册API响应:', res)
 
-		// TODO: 替换为实际的API调用
-		// const res = await registerApi(registerData)
+		// 检查响应是否成功
+		if (res.success === true && res.data.code === 200) {
+			console.log('注册成功，后端code:', res.data.code)
+			console.log('后端数据:', res.data)
 
-		// 模拟注册成功
-		setTimeout(() => {
-			uni.hideLoading()
-			uni.showToast({
-				title: '注册成功',
-				icon: 'success'
-			})
+			try {
+				// 保存登录信息
+				console.log('准备保存登录信息，数据:', res.data)
+				auth.saveLoginInfo(res.data)
+				console.log('登录信息保存成功')
 
-			// 跳转到登录页面
-			setTimeout(() => {
-				uni.redirectTo({
-					url: '/pages/login/login'
-				})
-			}, 1500)
-		}, 1000)
+				toast.success('注册成功！')
+				console.log('成功提示已显示')
 
+				// 跳转到首页
+				console.log('准备跳转到首页')
+				setTimeout(() => {
+					console.log('开始执行首页跳转')
+					navigation.switchTab('/pages/home/home')
+				}, 1500)
+			} catch (error) {
+				console.error('保存登录信息或跳转时出错:', error)
+				toast.error('注册成功但保存信息失败')
+			}
+		} else {
+			// 业务错误，显示后端返回的具体错误信息
+			console.log('注册失败，后响应状态:', res.success)
+			console.log('后端code:', res.data?.code)
+			console.log('后端错误信息:', res.data?.message)
+			toast.error(res.data?.message || '注册失败')
+		}
 	} catch (error) {
-		uni.hideLoading()
-		uni.showToast({
-			title: '注册失败，请重试',
-			icon: 'none'
-		})
+		console.error('注册网络错误:', error)
+
+		// 只有网络错误才会进入这里（request工具无法处理的错误）
+		// HTTP错误已经被request工具处理并显示了toast
+		// 这里主要用于记录日志
+	} finally {
+		toast.hideLoading()
 	}
 }
 
 // 跳转到登录页面
 const goToLogin = () => {
-	uni.navigateTo({
-		url: '/pages/login/login'
-	})
+	navigation.navigateTo('/pages/login/login')
 }
 
 // 组件卸载时清理定时器

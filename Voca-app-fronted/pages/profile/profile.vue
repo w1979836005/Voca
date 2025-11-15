@@ -194,6 +194,7 @@
 <script setup lang="ts">
 import { reactive, ref, computed, onMounted } from 'vue'
 import CustomTabbar from '@/components/custom-tabbar/custom-tabbar.vue'
+import { auth } from '@/utils/index.js'
 
 // 用户信息
 const userInfo = reactive({
@@ -394,24 +395,7 @@ const editUserInfo = () => {
 
 // 显示退出确认
 const showLogoutConfirm = () => {
-	uni.showModal({
-		title: '退出登录',
-		content: '确定要退出登录吗？',
-		success: (res) => {
-			if (res.confirm) {
-				uni.showLoading({
-					title: '退出中...'
-				})
-
-				setTimeout(() => {
-					uni.hideLoading()
-					uni.reLaunch({
-						url: '/pages/login/login'
-					})
-				}, 1500)
-			}
-		}
-	})
+	auth.logout(true)
 }
 
 // 页面加载时初始化

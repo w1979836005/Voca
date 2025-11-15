@@ -93,7 +93,7 @@ export default {
 	box-sizing: border-box;
 	border-top: none;
 	box-shadow: none;
-	z-index: 1000;
+	z-index: 99;
 }
 
 .tabbar-item {
