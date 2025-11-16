@@ -90,6 +90,40 @@ async function createBasicData() {
             console.log(`✓ 创建了 ${basicWordlists.length} 个基础词单`);
         }
 
+        // 检查是否已有用户数据
+        const userCount = await db.user.count();
+
+        if (userCount === 0) {
+            console.log('创建测试用户...');
+
+            const CryptoUtil = require('./utils/CryptoUtil');
+
+            // 创建测试用户
+            const testUsers = [
+                {
+                    username: 'testuser',
+                    email: 'test@example.com',
+                    password: CryptoUtil.hashPassword('123456'),
+                    role: 'user',
+                    isBan: 0,
+                    isDelete: 0,
+                    studyGoal: 20
+                },
+                {
+                    username: 'admin',
+                    email: 'admin@example.com',
+                    password: CryptoUtil.hashPassword('123456'),
+                    role: 'admin',
+                    isBan: 0,
+                    isDelete: 0,
+                    studyGoal: 50
+                }
+            ];
+
+            await db.user.bulkCreate(testUsers);
+            console.log(`✓ 创建了 ${testUsers.length} 个测试用户`);
+        }
+
         // 检查是否已有单词数据
         const wordCount = await db.word.count();
 

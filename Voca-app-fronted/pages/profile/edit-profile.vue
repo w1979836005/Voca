@@ -16,15 +16,20 @@
 			<view class="avatar-container" @click="changeAvatar">
 				<view class="avatar-wrapper">
 					<image
-						:src="userInfo.avatar || '/static/default-avatar.png'"
+						:src="formData.avatar || userInfo.avatar || '/static/default-avatar.png'"
 						class="avatar-image"
 						mode="aspectFill"
+						@error="onAvatarError"
 					></image>
 					<view class="avatar-overlay">
 						<wd-icon name="camera" size="24" color="#ffffff"></wd-icon>
+						<view class="uploading-status" v-if="isUploading">
+							<wd-loading type="ring" size="20" color="#ffffff"></wd-loading>
+						</view>
 					</view>
 				</view>
 				<text class="avatar-hint">点击更换头像</text>
+				<text class="avatar-size">支持JPG、PNG、GIF格式，不超过2MB</text>
 			</view>
 		</view>
 
@@ -47,7 +52,10 @@
 					placeholder="请输入邮箱"
 					class="form-input"
 					type="email"
+					:disabled="true"
+					style="background: #f8f9fa;"
 				></wd-input>
+				<text class="form-hint">邮箱地址不可修改</text>
 			</view>
 
 			<view class="form-item">
@@ -98,14 +106,16 @@
 
 <script setup lang="ts">
 import { reactive, ref, onMounted } from 'vue'
+import { auth } from '@/utils/index.js'
+import { userAPI } from '@/api/user.js'
 
 // 用户原始信息
 const userInfo = reactive({
 	avatar: '',
-	username: 'ALEX',
-	email: 'alex@example.com',
-	bio: '热爱学习的英语爱好者',
-	dailyGoal: '50'
+	username: '',
+	email: '',
+	bio: '',
+	dailyGoal: 20
 })
 
 // 表单数据
@@ -114,18 +124,63 @@ const formData = reactive({
 	username: '',
 	email: '',
 	bio: '',
-	dailyGoal: ''
+	dailyGoal: 20
 })
 
-// 页面加载时初始化表单数据
+// 上传状态
+const isUploading = ref(false)
+
+// 页面加载时加载用户信息
 onMounted(() => {
-	// 复制用户信息到表单
-	formData.avatar = userInfo.avatar
-	formData.username = userInfo.username
-	formData.email = userInfo.email
-	formData.bio = userInfo.bio
-	formData.dailyGoal = userInfo.dailyGoal
+	loadUserInfo()
 })
+
+// 加载用户信息
+const loadUserInfo = async () => {
+	try {
+		// 首先从本地存储获取用户信息
+		const localUserInfo = auth.getUserInfo()
+		if (localUserInfo) {
+			userInfo.avatar = localUserInfo.userAvatar || ''
+			userInfo.username = localUserInfo.username || ''
+			userInfo.email = localUserInfo.email || ''
+			userInfo.bio = localUserInfo.userProfile || ''
+			userInfo.dailyGoal = localUserInfo.studyGoal || 20
+
+			// 复制到表单
+			formData.avatar = userInfo.avatar
+			formData.username = userInfo.username
+			formData.email = userInfo.email
+			formData.bio = userInfo.bio
+			formData.dailyGoal = userInfo.dailyGoal
+		}
+
+		// 从服务器获取最新用户信息
+		const response = await userAPI.getProfile()
+		if (response && response.code === 200) {
+			const serverUserInfo = response.data
+			userInfo.avatar = serverUserInfo.userAvatar || ''
+			userInfo.username = serverUserInfo.username || ''
+			userInfo.email = serverUserInfo.email || ''
+			userInfo.bio = serverUserInfo.userProfile || ''
+			userInfo.dailyGoal = serverUserInfo.studyGoal || 20
+
+			// 复制到表单
+			formData.avatar = userInfo.avatar
+			formData.username = userInfo.username
+			formData.email = userInfo.email
+			formData.bio = userInfo.bio
+			formData.dailyGoal = userInfo.dailyGoal
+		}
+	} catch (error) {
+		console.error('获取用户信息失败:', error)
+		uni.showToast({
+			title: '获取用户信息失败',
+			icon: 'none',
+			duration: 2000
+		})
+	}
+}
 
 // 返回上一页
 const goBack = () => {
@@ -144,8 +199,25 @@ const changeAvatar = () => {
 				uni.chooseImage({
 					count: 1,
 					sourceType: ['camera'],
+					sizeType: ['compressed'], // 压缩图片
 					success: (imageRes) => {
-						formData.avatar = imageRes.tempFilePaths[0]
+						const tempFilePath = imageRes.tempFilePaths[0]
+						console.log('拍照获取图片:', tempFilePath)
+
+						// 立即显示预览
+						formData.avatar = tempFilePath
+
+						// 延迟一下再上传，确保图片准备就绪
+						setTimeout(() => {
+							uploadAvatar(tempFilePath)
+						}, 100)
+					},
+					fail: (error) => {
+						console.error('拍照失败:', error)
+						uni.showToast({
+							title: '拍照失败，请重试',
+							icon: 'none'
+						})
 					}
 				})
 			} else if (res.tapIndex === 1) {
@@ -153,17 +225,104 @@ const changeAvatar = () => {
 				uni.chooseImage({
 					count: 1,
 					sourceType: ['album'],
+					sizeType: ['compressed'], // 压缩图片
 					success: (imageRes) => {
-						formData.avatar = imageRes.tempFilePaths[0]
+						const tempFilePath = imageRes.tempFilePaths[0]
+						console.log('相册选择图片:', tempFilePath)
+
+						// 立即显示预览
+						formData.avatar = tempFilePath
+
+						// 延迟一下再上传，确保图片准备就绪
+						setTimeout(() => {
+							uploadAvatar(tempFilePath)
+						}, 100)
+					},
+					fail: (error) => {
+						console.error('选择图片失败:', error)
+						uni.showToast({
+							title: '选择图片失败，请重试',
+							icon: 'none'
+						})
 					}
 				})
 			}
+		},
+		fail: (error) => {
+			console.error('显示选择框失败:', error)
+			uni.showToast({
+				title: '操作失败，请重试',
+				icon: 'none'
+			})
 		}
 	})
 }
 
+// 头像加载失败处理
+const onAvatarError = () => {
+	console.log('头像加载失败，使用默认头像')
+	// 可以选择显示一个默认头像或者保持当前状态
+}
+
+// 上传头像
+const uploadAvatar = async (filePath) => {
+	try {
+		isUploading.value = true
+		console.log('开始上传头像:', filePath)
+
+		const response = await userAPI.uploadAvatar(filePath)
+		console.log('头像上传响应:', response)
+
+		if (response && response.code === 200) {
+			// 上传成功，更新头像URL
+			const avatarUrl = response.data.userAvatar
+			userInfo.avatar = avatarUrl
+			formData.avatar = avatarUrl
+
+			console.log('头像上传成功:', avatarUrl)
+
+			uni.showToast({
+				title: '头像上传成功',
+				icon: 'success',
+				duration: 2000
+			})
+		} else {
+			// 显示具体的错误信息
+			const errorMessage = response?.message || '头像上传失败'
+			console.error('头像上传业务错误:', errorMessage)
+			uni.showToast({
+				title: errorMessage,
+				icon: 'none',
+				duration: 3000
+			})
+		}
+	} catch (error) {
+		console.error('上传头像网络错误:', error)
+
+		// 根据错误类型显示不同的提示
+		let errorMessage = '头像上传失败'
+		if (error.code === 413) {
+			errorMessage = '图片大小不能超过2MB'
+		} else if (error.code === 415) {
+			errorMessage = '不支持的图片格式'
+		} else if (error.code === 401) {
+			errorMessage = '请先登录后再上传头像'
+		} else if (error.errMsg && error.errMsg.includes('file')) {
+			errorMessage = '图片上传失败，请重试'
+		}
+
+		uni.showToast({
+			title: errorMessage,
+			icon: 'none',
+			duration: 3000
+		})
+	} finally {
+		isUploading.value = false
+	}
+}
+
 // 保存个人信息
-const saveProfile = () => {
+const saveProfile = async () => {
 	console.log('点击保存按钮')
 
 	// 表单验证
@@ -175,19 +334,34 @@ const saveProfile = () => {
 		return
 	}
 
-	if (!formData.email.trim()) {
+	if (formData.username.trim().length < 2) {
 		uni.showToast({
-			title: '请输入邮箱',
+			title: '用户名至少2个字符',
 			icon: 'none'
 		})
 		return
 	}
 
-	// 邮箱格式验证
-	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-	if (!emailRegex.test(formData.email)) {
+	if (formData.username.trim().length > 50) {
 		uni.showToast({
-			title: '请输入正确的邮箱格式',
+			title: '用户名最多50个字符',
+			icon: 'none'
+		})
+		return
+	}
+
+	if (formData.bio && formData.bio.length > 200) {
+		uni.showToast({
+			title: '个人简介最多200个字符',
+			icon: 'none'
+		})
+		return
+	}
+
+	const dailyGoal = parseInt(formData.dailyGoal)
+	if (isNaN(dailyGoal) || dailyGoal < 1 || dailyGoal > 100) {
+		uni.showToast({
+			title: '学习目标应为1-100之间的数字',
 			icon: 'none'
 		})
 		return
@@ -198,26 +372,81 @@ const saveProfile = () => {
 		title: '保存中...'
 	})
 
-	// 模拟保存操作
-	setTimeout(() => {
-		// 更新原始用户信息
-		userInfo.avatar = formData.avatar
-		userInfo.username = formData.username
-		userInfo.email = formData.email
-		userInfo.bio = formData.bio
-		userInfo.dailyGoal = formData.dailyGoal
+	try {
+		// 准备更新数据（只包含后端允许的字段）
+		const updateData = {
+			username: formData.username.trim(),
+			userProfile: formData.bio.trim(),
+			studyGoal: dailyGoal
+		}
 
+		// 调用后端API更新用户信息
+		const response = await userAPI.updateProfile(updateData)
+
+		if (response && response.code === 200) {
+			// 更新成功，更新本地存储的用户信息
+			const updatedUserInfo = response.data
+			auth.saveLoginInfo({
+				token: auth.getToken(),
+				refreshToken: auth.getRefreshToken(),
+				user: {
+					userId: updatedUserInfo.userId,
+					username: updatedUserInfo.username,
+					email: updatedUserInfo.email,
+					userAvatar: updatedUserInfo.userAvatar,
+					userProfile: updatedUserInfo.userProfile,
+					studyGoal: updatedUserInfo.studyGoal,
+					role: updatedUserInfo.role,
+					createdAt: updatedUserInfo.createdAt
+				}
+			})
+
+			// 更新本地用户信息
+			userInfo.username = updatedUserInfo.username
+			userInfo.bio = updatedUserInfo.userProfile
+			userInfo.dailyGoal = updatedUserInfo.studyGoal
+
+			uni.hideLoading()
+			uni.showToast({
+				title: '保存成功',
+				icon: 'success'
+			})
+
+			// 返回上一页
+			setTimeout(() => {
+				// 触发个人中心页面刷新事件
+				uni.$emit('userProfileUpdated')
+				uni.navigateBack()
+			}, 1500)
+		} else {
+			uni.hideLoading()
+			uni.showToast({
+				title: response?.message || '保存失败',
+				icon: 'none'
+			})
+		}
+	} catch (error) {
 		uni.hideLoading()
-		uni.showToast({
-			title: '保存成功',
-			icon: 'success'
-		})
+		console.error('保存用户信息失败:', error)
 
-		// 返回上一页
-		setTimeout(() => {
-			uni.navigateBack()
-		}, 1500)
-	}, 1000)
+		// 根据错误类型显示不同的提示
+		if (error.code === 400) {
+			uni.showToast({
+				title: '请求参数错误',
+				icon: 'none'
+			})
+		} else if (error.code === 422) {
+			uni.showToast({
+				title: error.message || '业务处理失败',
+				icon: 'none'
+			})
+		} else {
+			uni.showToast({
+				title: '网络错误，请重试',
+				icon: 'none'
+			})
+		}
+	}
 }
 
 // 取消编辑
@@ -342,6 +571,21 @@ page {
 	font-family: $voca-secondary-font;
 	font-size: 26rpx;
 	color: #666666;
+	margin-top: 8rpx;
+}
+
+.avatar-size {
+	font-family: $voca-secondary-font;
+	font-size: 22rpx;
+	color: #999999;
+	margin-top: 4rpx;
+}
+
+.uploading-status {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
 }
 
 /* 表单区域 */
@@ -380,6 +624,13 @@ page {
 	font-size: 28rpx;
 	background: #ffffff;
 	min-height: 120rpx;
+}
+
+.form-hint {
+	font-family: $voca-secondary-font;
+	font-size: 22rpx;
+	color: #999999;
+	margin-top: 8rpx;
 }
 
 /* 操作按钮 */

@@ -132,5 +132,5 @@ export class WordlistAPI {
 // 导出单例实例
 export const wordlistAPI = new WordlistAPI();
 
-// 导出类
-export { WordlistAPI };
+// 导出类作为默认导出
+export default WordlistAPI;

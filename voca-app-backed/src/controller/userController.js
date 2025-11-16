@@ -1,6 +1,6 @@
 const Joi = require('joi');
 const UserService = require('../service/userService');
-const { asyncHandler } = require('../middleware/errorHandler');
+const { asyncHandler, ValidationException } = require('../middleware/errorHandler');
 const ResponseUtil = require('../utils/ResponseUtil');
 
 /**
@@ -35,11 +35,25 @@ class UserController {
     static uploadAvatar = asyncHandler(async (req, res) => {
         const userId = req.user.userId;
 
-        // TODO: 实现文件上传逻辑
-        // 这里应该从req.file获取上传的文件，并保存到文件系统或云存储
-        // 目前返回示例URL
-        const avatarUrl = `/uploads/avatars/${userId}_${Date.now()}.jpg`;
+        // 检查是否有上传的文件
+        if (!req.file) {
+            throw new ValidationException('请选择要上传的头像文件');
+        }
 
+        const file = req.file;
+        console.log('上传的头像文件:', {
+            originalname: file.originalname,
+            mimetype: file.mimetype,
+            size: file.size,
+            filename: file.filename,
+            path: file.path
+        });
+
+        // 生成头像访问URL
+        const { getFileUrl } = require('../middleware/upload');
+        const avatarUrl = getFileUrl(file.filename);
+
+        // 更新用户头像URL
         const updatedAvatar = await UserService.updateUserAvatar(userId, avatarUrl);
 
         res.json(ResponseUtil.success(updatedAvatar, '头像上传成功'));

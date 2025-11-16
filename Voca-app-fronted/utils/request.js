@@ -31,7 +31,7 @@ class Request {
     getBaseURL() {
         // 可以根据不同环境返回不同的baseURL
         // #ifdef H5
-        return 'http://localhost:3000/api';
+        return 'http://localhost:3000/api';  // 修正为后端实际端口
         // #endif
 
         // #ifdef MP-WEIXIN
@@ -41,13 +41,13 @@ class Request {
         // #ifdef APP-PLUS
         // 开发环境
         if (process.env.NODE_ENV === 'development') {
-            return 'http://192.168.1.100:3000/api'; // 替换为你的开发环境IP
+            return 'http://192.168.1.100:3000/api'; // 替换为你的开发环境IP，修正端口
         }
         // 生产环境
         return 'https://your-domain.com/api';
         // #endif
 
-        return 'http://localhost:3000/api';
+        return 'http://localhost:3000/api';  // 修正为后端实际端口
     }
 
     /**
@@ -128,22 +128,8 @@ class Request {
             data
         });
 
-        // HTTP状态码为2xx都认为是成功
-        if (statusCode >= 200 && statusCode < 300) {
-            // 直接返回原始响应数据，不做任何转换
-            return {
-                success: true,
-                data: data
-            };
-        }
-
-        // HTTP错误 - 不在这里处理，让调用方根据data.code处理业务错误
-        return {
-            success: false,
-            data: data,
-            message: data?.message || '请求失败',
-            code: statusCode
-        };
+        // 直接返回原始响应数据，不做任何处理
+        return data;
     }
 
     /**
@@ -192,11 +178,11 @@ class Request {
 
         this.showError(message);
 
+        // 直接返回后端错误响应格式
         return {
-            success: false,
-            data: null,
+            code: statusCode,
             message,
-            code: statusCode
+            data: null
         };
     }
 
@@ -252,9 +238,9 @@ class Request {
                     this.showError(message);
 
                     reject({
-                        success: false,
-                        data: null,
+                        code: -1,
                         message,
+                        data: null,
                         error
                     });
                 },
@@ -353,9 +339,8 @@ class Request {
                 name: options.name || 'file',
                 formData,
                 header: {
-                    ...this.config.header,
-                    // 上传文件使用multipart/form-data
-                    'Content-Type': 'multipart/form-data'
+                    // 不要手动设置Content-Type，让uni.uploadFile自动设置multipart boundary
+                    // Authorization会自动添加
                 }
             };
 
@@ -363,6 +348,11 @@ class Request {
             const token = uni.getStorageSync('token');
             if (token) {
                 config.header.Authorization = `Bearer ${token}`;
+            }
+
+            // 显示loading
+            if (options.showLoading !== false) {
+                this.showLoading();
             }
 
             uni.uploadFile({
@@ -381,6 +371,12 @@ class Request {
                     console.error('文件上传失败:', error);
                     this.showError('文件上传失败');
                     reject(error);
+                },
+                complete: () => {
+                    // 隐藏loading
+                    if (options.showLoading !== false) {
+                        this.hideLoading();
+                    }
                 }
             });
         });

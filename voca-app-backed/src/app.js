@@ -12,6 +12,9 @@ const app = express()
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 
+// 静态文件服务 - 提供上传文件的访问
+app.use('/uploads', express.static('uploads'))
+
 // 请求日志中间件
 app.use((req, res, next) => {
     const start = Date.now()

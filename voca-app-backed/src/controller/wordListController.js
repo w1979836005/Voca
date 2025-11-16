@@ -33,6 +33,23 @@ class WordListController {
     });
 
     /**
+     * 获取用户的词单列表（包含用户是否已添加的状态）
+     */
+    static getUserWordLists = asyncHandler(async (req, res) => {
+        const userId = req.user.userId;
+        const { page, limit, type, search } = req.query;
+
+        const wordLists = await WordListService.getUserWordLists(userId, {
+            page: parseInt(page) || 1,
+            limit: parseInt(limit) || 10,
+            type: type || 'all',
+            search: search || ''
+        });
+
+        res.json(ResponseUtil.success(wordLists, '获取用户词单列表成功'));
+    });
+
+    /**
      * 创建词单
      */
     static createWordList = asyncHandler(async (req, res) => {
@@ -126,8 +143,15 @@ const validationRules = {
         page: Joi.number().min(1).optional(),
         limit: Joi.number().min(1).max(100).optional(),
         type: Joi.string().valid('all', 'system', 'custom').optional(),
-        search: Joi.string().max(50).optional()
-    }),
+        search: Joi.string().max(50).allow('').optional()
+    }).unknown(true),
+
+    getUserWordLists: Joi.object({
+        page: Joi.number().min(1).optional(),
+        limit: Joi.number().min(1).max(100).optional(),
+        type: Joi.string().valid('all', 'system', 'custom').optional(),
+        search: Joi.string().max(50).allow('').optional()
+    }).unknown(true),
 
     getWordsInWordList: Joi.object({
         page: Joi.number().min(1).optional(),

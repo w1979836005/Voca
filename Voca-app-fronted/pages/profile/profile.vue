@@ -1,10 +1,25 @@
 <template>
 	<view class="profile-container">
+		<!-- 下拉刷新 -->
+		<scroll-view
+			class="scroll-container"
+			scroll-y
+			refresher-enabled
+			:refresher-triggered="isRefreshing"
+			@refresherrefresh="onRefresh"
+		>
 		<!-- 用户信息卡片 -->
 		<view class="user-card">
 			<view class="user-avatar-section">
 				<view class="user-avatar">
-					<text class="avatar-text">{{ getAvatarText(userInfo.username) }}</text>
+					<image
+						v-if="userInfo.userAvatar"
+						:src="userInfo.userAvatar"
+						class="avatar-image"
+						mode="aspectFill"
+						@error="onAvatarError"
+					></image>
+					<text v-else class="avatar-text">{{ getAvatarText(userInfo.username) }}</text>
 				</view>
 				<view class="user-level">
 					<text class="level-text">{{ getUserLevel() }}</text>
@@ -188,19 +203,25 @@
 
 		<!-- 自定义TabBar -->
 		<custom-tabbar />
+		</scroll-view>
 	</view>
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, computed, onMounted } from 'vue'
+import { reactive, ref, computed, onMounted, onUnmounted } from 'vue'
 import CustomTabbar from '@/components/custom-tabbar/custom-tabbar.vue'
 import { auth } from '@/utils/index.js'
+import { userAPI } from '@/api/user.js'
+
+// 下拉刷新状态
+const isRefreshing = ref(false)
 
 // 用户信息
 const userInfo = reactive({
-	username: 'ALEX',
-	email: 'alex@example.com',
-	joinDate: '2024-01-15'
+	username: '',
+	email: '',
+	userAvatar: '',
+	joinDate: ''
 })
 
 // 学习统计
@@ -398,10 +419,79 @@ const showLogoutConfirm = () => {
 	auth.logout(true)
 }
 
+// 下拉刷新处理
+const onRefresh = async () => {
+	isRefreshing.value = true
+	await loadUserInfo()
+	isRefreshing.value = false
+}
+
+// 加载用户信息
+const loadUserInfo = async () => {
+	try {
+		// 首先从本地存储获取用户信息
+		const localUserInfo = auth.getUserInfo()
+		if (localUserInfo && localUserInfo.username) {
+			// 使用本地用户信息作为默认显示
+			userInfo.username = localUserInfo.username || '未知用户'
+			userInfo.email = localUserInfo.email || ''
+			userInfo.userAvatar = localUserInfo.userAvatar || ''
+			userInfo.joinDate = localUserInfo.createdAt || new Date().toISOString()
+		}
+
+		// 然后从服务器获取最新的用户信息
+		const response = await userAPI.getProfile()
+		if (response && response.code === 200) {
+			const serverUserInfo = response.data
+			userInfo.username = serverUserInfo.username || userInfo.username
+			userInfo.email = serverUserInfo.email || userInfo.email
+			userInfo.userAvatar = serverUserInfo.userAvatar || userInfo.userAvatar
+			userInfo.joinDate = serverUserInfo.createdAt || userInfo.joinDate
+
+			// 更新本地存储的用户信息
+			auth.saveLoginInfo({
+				token: auth.getToken(),
+				refreshToken: auth.getRefreshToken(),
+				user: serverUserInfo
+			})
+		}
+	} catch (error) {
+		console.error('获取用户信息失败:', error)
+		// 如果API调用失败，确保显示默认用户名而不是空字符串
+		if (!userInfo.username) {
+			const localUserInfo = auth.getUserInfo()
+			userInfo.username = localUserInfo.username || '用户'
+			userInfo.userAvatar = localUserInfo.userAvatar || ''
+		}
+		uni.showToast({
+			title: '获取用户信息失败',
+			icon: 'none',
+			duration: 2000
+		})
+	}
+}
+
 // 页面加载时初始化
 onMounted(() => {
-	// 可以在这里加载用户数据
 	console.log('个人页面加载完成')
+	loadUserInfo()
+
+	// 监听用户信息更新事件
+	uni.$on('userProfileUpdated', () => {
+		console.log('收到用户信息更新事件，刷新数据')
+		loadUserInfo()
+	})
+})
+
+// 头像加载失败处理
+const onAvatarError = () => {
+	console.log('头像加载失败，显示默认文字头像')
+	userInfo.userAvatar = ''
+}
+
+// 组件卸载时移除事件监听
+onUnmounted(() => {
+	uni.$off('userProfileUpdated')
 })
 </script>
 
@@ -413,6 +503,12 @@ page {
 
 .profile-container {
 	height: 100vh;
+	display: flex;
+	flex-direction: column;
+}
+
+.scroll-container {
+	flex: 1;
 	padding: 40rpx 30rpx 140rpx 30rpx;
 	display: flex;
 	flex-direction: column;
@@ -470,11 +566,24 @@ page {
 	align-items: center;
 	justify-content: center;
 	margin-bottom: 12rpx;
+	overflow: hidden;
+	position: relative;
+
+	.avatar-image {
+		width: 100%;
+		height: 100%;
+		border-radius: 50%;
+		object-fit: cover;
+	}
 
 	.avatar-text {
 		color: #ffffff;
 		font-size: 32rpx;
 		font-weight: bold;
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
 	}
 }
 

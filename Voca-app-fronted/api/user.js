@@ -50,7 +50,7 @@ export class UserAPI {
    * @returns {Promise<Object>} 上传结果
    */
   async uploadAvatar(filePath) {
-    return request.upload(USER_API.UPLOAD_AVATAR, filePath);
+    return request.upload(USER_API.UPLOAD_AVATAR, filePath, {}, { name: 'avatar' });
   }
 
   /**
@@ -87,5 +87,5 @@ export class UserAPI {
 // 导出单例实例
 export const userAPI = new UserAPI();
 
-// 导出类
-export { UserAPI };
+// 导出类（避免重复导出）
+export default UserAPI;

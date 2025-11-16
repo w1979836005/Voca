@@ -98,7 +98,7 @@
 		<view class="completion-modal" v-if="showCompletionModal">
 			<view class="modal-content">
 				<view class="completion-header">
-					<wd-icon name="check-circle" size="48" color="#4CAF50"></wd-icon>
+					<wd-icon name="check-circle" size="48" color="#000000"></wd-icon>
 					<text class="completion-title">学习完成！</text>
 				</view>
 				<text class="completion-message">恭喜你完成了今日的学习任务</text>
@@ -139,7 +139,7 @@
 								></view>
 							</view>
 						</view>
-						<wd-icon v-if="currentGroupId === group.id" name="check" size="20" color="#4CAF50"></wd-icon>
+						<wd-icon v-if="currentGroupId === group.id" name="check" size="20" color="#000000"></wd-icon>
 					</view>
 				</view>
 			</view>
@@ -936,7 +936,7 @@ page {
 
 			.progress-fill-small {
 				height: 100%;
-				background: #4CAF50;
+				background: #000000;
 				border-radius: 3rpx;
 				transition: width 0.3s ease;
 			}

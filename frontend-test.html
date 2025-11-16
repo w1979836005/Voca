@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>头像上传前端测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .avatar-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .avatar-preview {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 3px solid #ddd;
+            margin: 0 auto 20px;
+            overflow: hidden;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .avatar-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        .file-input {
+            display: none;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .success {
+            background: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .loading {
+            text-align: center;
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 前端头像上传测试</h1>
+
+        <div class="avatar-section">
+            <div class="avatar-preview" id="avatarPreview">
+                <img id="avatarImage" src="/static/default-avatar.png" alt="头像预览">
+            </div>
+            <input type="file" id="fileInput" class="file-input" accept="image/*">
+            <button class="btn" onclick="document.getElementById('fileInput').click()">
+                选择图片
+            </button>
+            <button class="btn" id="uploadBtn" onclick="uploadAvatar()" disabled>
+                上传头像
+            </button>
+        </div>
+
+        <div id="result"></div>
+
+        <div style="margin-top: 30px;">
+            <h3>📋 测试步骤</h3>
+            <ol>
+                <li>点击"选择图片"按钮选择一张图片</li>
+                <li>预览图片后会显示"上传头像"按钮</li>
+                <li>点击"上传头像"上传到服务器</li>
+                <li>查看上传结果和新的头像URL</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        let selectedFile = null;
+        let authToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsInVzZXJuYW1lIjoibmV3dGVzdHVzZXIiLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJyb2xlIjoidXNlciIsImlhdCI6MTc2MzI5MTkxMCwiZXhwIjoxNzYzMzc4MzEwLCJhdWQiOiJ2b2NhLXVzZXJzIiwiaXNzIjoidm9jYS1hcHAifQ.FVk2FJ6UKYPRZGpW-MPXRG1sv_jQpe-4X6KNPSL6R58';
+
+        // 文件选择处理
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                // 验证文件类型
+                if (!file.type.startsWith('image/')) {
+                    showResult('请选择图片文件', 'error');
+                    return;
+                }
+
+                // 验证文件大小 (2MB)
+                if (file.size > 2 * 1024 * 1024) {
+                    showResult('图片大小不能超过2MB', 'error');
+                    return;
+                }
+
+                selectedFile = file;
+
+                // 预览图片
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('avatarImage').src = e.target.result;
+                    document.getElementById('uploadBtn').disabled = false;
+                    showResult(`已选择: ${file.name} (${(file.size / 1024).toFixed(2)}KB)`, 'success');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // 上传头像
+        async function uploadAvatar() {
+            if (!selectedFile) {
+                showResult('请先选择图片', 'error');
+                return;
+            }
+
+            const uploadBtn = document.getElementById('uploadBtn');
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = '上传中...';
+
+            showResult('正在上传头像...', 'loading');
+
+            try {
+                const formData = new FormData();
+                formData.append('avatar', selectedFile);
+
+                const response = await fetch('http://localhost:3000/api/user/avatar', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.code === 200) {
+                    showResult(
+                        `✅ 上传成功!<br>
+                        新头像URL: <a href="${data.data.userAvatar}" target="_blank">${data.data.userAvatar}</a><br>
+                        用户ID: ${data.data.userId}`,
+                        'success'
+                    );
+
+                    // 更新预览
+                    document.getElementById('avatarImage').src = data.data.userAvatar;
+
+                    // 验证用户信息是否更新
+                    setTimeout(verifyProfileUpdate, 1000);
+                } else {
+                    showResult(`❌ 上传失败: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                console.error('上传错误:', error);
+                showResult(`❌ 网络错误: ${error.message}`, 'error');
+            } finally {
+                uploadBtn.disabled = false;
+                uploadBtn.textContent = '上传头像';
+            }
+        }
+
+        // 验证用户信息更新
+        async function verifyProfileUpdate() {
+            try {
+                const response = await fetch('http://localhost:3000/api/user/profile', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.code === 200) {
+                    showResult(
+                        `✅ 头像上传成功!<br>
+                        新头像URL: <a href="${data.data.userAvatar}" target="_blank">${data.data.userAvatar}</a><br>
+                        ✅ 用户信息已同步更新<br>
+                        用户名: ${data.data.username}<br>
+                        邮箱: ${data.data.email}`,
+                        'success'
+                    );
+                } else {
+                    showResult('❌ 用户信息同步失败', 'error');
+                }
+            } catch (error) {
+                console.error('验证错误:', error);
+                showResult(`❌ 验证时发生错误: ${error.message}`, 'error');
+            }
+        }
+
+        // 显示结果
+        function showResult(message, type) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = `result ${type}`;
+            resultDiv.innerHTML = message;
+        }
+
+        // 页面加载时获取当前用户信息
+        window.addEventListener('load', async function() {
+            try {
+                const response = await fetch('http://localhost:3000/api/user/profile', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.code === 200 && data.data.userAvatar) {
+                    document.getElementById('avatarImage').src = data.data.userAvatar;
+                    showResult(`当前用户: ${data.data.username}<br>当前头像: ${data.data.userAvatar}`, 'success');
+                }
+            } catch (error) {
+                console.error('获取用户信息失败:', error);
+            }
+        });
+    </script>
+</body>
+</html>

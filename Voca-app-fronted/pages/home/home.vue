@@ -22,7 +22,7 @@
 
 		<!-- 问候语部分 -->
 		<view class="greeting-section">
-			<text class="greeting-text">{{ getGreeting() }}</text>
+			<text class="greeting-text">{{ greetingText }}</text>
 			<text class="user-name">{{ userName }}</text>
 		</view>
 
@@ -171,7 +171,7 @@
 							<text class="item-count">{{ item.wordCount }} 词</text>
 						</view>
 						<view class="item-status" v-if="item.name === currentWordlist">
-							<wd-icon name="check" size="20" color="#4CAF50"></wd-icon>
+							<wd-icon name="check" size="20" color="#000000"></wd-icon>
 						</view>
 					</view>
 				</view>
@@ -180,11 +180,15 @@
 	</template>
 
 <script setup lang="ts">
-import { reactive, computed, ref, onMounted } from 'vue'
+import { reactive, computed, ref, onMounted, onUnmounted } from 'vue'
 import CustomTabbar from '@/components/custom-tabbar/custom-tabbar.vue'
+import { auth } from '@/utils/index.js'
 
 // 用户数据
-const userName = ref('ALEX')
+const userName = ref('用户')
+
+// 响应式问候语
+const greetingText = ref('早上好')
 
 // 当前词单
 const currentWordlist = computed(() => {
@@ -249,15 +253,27 @@ const wordLists = computed(() => {
 	return allWordLists.filter(item => myWordlistIds.value.includes(item.id))
 })
 
-// 获取问候语
+// 更新问候语
+const updateGreeting = () => {
+	const now = new Date()
+	const hour = now.getHours()
+
+	// 确保在不同平台（H5、小程序、App）都能正确获取时间
+	console.log('当前时间:', now.toLocaleString(), '小时:', hour)
+
+	let greeting = ''
+	if (hour < 6) greeting = '凌晨好'
+	else if (hour < 12) greeting = '早上好'
+	else if (hour < 18) greeting = '下午好'
+	else greeting = '晚上好'
+
+	greetingText.value = greeting
+	return greeting
+}
+
+// 获取问候语（保持模板兼容性）
 const getGreeting = () => {
-	const hour = new Date().getHours()
-	if (hour < 6) return '凌晨好'
-	if (hour < 12) return '早上好'
-	if (hour < 14) return '中午好'
-	if (hour < 17) return '下午好'
-	if (hour < 19) return '傍晚好'
-	return '晚上好'
+	return greetingText.value
 }
 
 // 随机获取名言
@@ -357,11 +373,43 @@ const startReview = () => {
 	})
 }
 
+// 加载用户信息
+const loadUserInfo = () => {
+	try {
+		const localUserInfo = auth.getUserInfo()
+		if (localUserInfo && localUserInfo.username) {
+			userName.value = localUserInfo.username
+		}
+	} catch (error) {
+		console.error('获取用户信息失败:', error)
+		// 保持默认用户名
+	}
+}
+
 // 页面加载时初始化
 onMounted(() => {
 	getRandomQuote()
 	loadWordlistProgress()
+	loadUserInfo()
+	updateGreeting()
+
+	// 每分钟更新一次问候语，确保跨时段时自动更新
+	setInterval(() => {
+		updateGreeting()
+	}, 60000)
+
+	// 监听用户信息更新事件
+	uni.$on('userProfileUpdated', () => {
+		console.log('首页收到用户信息更新事件，刷新用户名')
+		loadUserInfo()
+	})
 })
+
+// 组件卸载时移除事件监听
+onUnmounted(() => {
+	uni.$off('userProfileUpdated')
+})
+
 </script>
 
 <style lang="scss">

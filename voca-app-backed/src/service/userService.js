@@ -95,12 +95,41 @@ class UserService {
             throw new NotFoundException('用户不存在');
         }
 
+        // 保存旧头像URL，用于删除旧文件
+        const oldAvatarUrl = user.userAvatar;
+
+        // 更新数据库中的头像URL
         await user.update({ userAvatar: avatarUrl });
+
+        // 删除旧头像文件（如果有且不是默认头像）
+        if (oldAvatarUrl && oldAvatarUrl !== avatarUrl) {
+            this.deleteOldAvatarFile(oldAvatarUrl);
+        }
 
         return {
             userId: user.id,
-            userAvatar: user.userAvatar
+            userAvatar: avatarUrl
         };
+    }
+
+    /**
+     * 删除旧头像文件
+     * @param {String} avatarUrl - 头像URL
+     */
+    static deleteOldAvatarFile(avatarUrl) {
+        try {
+            if (!avatarUrl) return;
+
+            // 从URL中提取文件名
+            const urlParts = avatarUrl.split('/');
+            const filename = urlParts[urlParts.length - 1];
+
+            // 构建文件路径
+            const { deleteOldAvatar } = require('../middleware/upload');
+            deleteOldAvatar(filename);
+        } catch (error) {
+            console.error('删除旧头像文件失败:', error);
+        }
     }
 
     /**

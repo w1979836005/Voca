@@ -102,9 +102,23 @@
 				password: formData.password
 			})
 
-			if (res.success === true && res.data.code === 200) {
+			if (res.code === 200) {
 				// 保存登录信息
-				auth.saveLoginInfo(res.data)
+				const loginData = res.data; // 实际的登录数据
+				auth.saveLoginInfo({
+					token: loginData.token,
+					refreshToken: loginData.refreshToken,
+					user: {
+						userId: loginData.userId,
+						username: loginData.username,
+						email: loginData.email,
+						userAvatar: loginData.userAvatar,
+						userProfile: loginData.userProfile,
+						studyGoal: loginData.studyGoal,
+						role: loginData.role,
+						createdAt: new Date().toISOString()
+					}
+				})
 
 				toast.success('登录成功！')
 
@@ -114,7 +128,7 @@
 				}, 1500)
 			} else {
 				// 业务错误，显示后端返回的具体错误信息
-				toast.error(res.data?.message || '登录失败')
+				toast.error(res?.message || '登录失败')
 			}
 		} catch (error) {
 			console.error('登录错误:', error)

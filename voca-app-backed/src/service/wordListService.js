@@ -12,67 +12,97 @@ class WordListService {
      */
     static async getWordLists(options = {}) {
         const { page = 1, limit = 10, type = 'all', search = '' } = options;
+        const { Op } = db.Sequelize;
 
-        // TODO: 实际实现应该查询数据库，这里返回模拟数据
-        const mockWordLists = [
-            {
-                wordListId: 1,
-                wordListName: 'CET-4 核心词汇',
-                description: '大学英语四级考试核心词汇',
-                wordCount: 2000,
-                isSystem: true,
-                creator: null,
-                createdAt: '2025-11-01T10:00:00Z'
-            },
-            {
-                wordListId: 2,
-                wordListName: 'CET-6 高频词汇',
-                description: '大学英语六级考试高频词汇',
-                wordCount: 1500,
-                isSystem: true,
-                creator: null,
-                createdAt: '2025-11-02T10:00:00Z'
-            },
-            {
-                wordListId: 3,
-                wordListName: '我的生词本',
-                description: '学习过程中遇到的生词',
-                wordCount: 120,
-                isSystem: false,
-                creator: { id: 2, username: 'testuser_updated' },
-                createdAt: '2025-11-10T15:30:00Z'
+        try {
+            // 构建查询条件
+            const whereCondition = {
+                isDelete: 0  // 只查询未删除的词单
+            };
+
+            // 根据类型筛选
+            if (type === 'system') {
+                whereCondition.isSystemBuiltIn = 1;
+            } else if (type === 'custom') {
+                whereCondition.isSystemBuiltIn = 0;
             }
-        ];
 
-        // 模拟筛选和分页逻辑
-        let filteredWordLists = mockWordLists;
-
-        if (type === 'system') {
-            filteredWordLists = mockWordLists.filter(wl => wl.isSystem);
-        } else if (type === 'custom') {
-            filteredWordLists = mockWordLists.filter(wl => !wl.isSystem);
-        }
-
-        if (search) {
-            filteredWordLists = filteredWordLists.filter(wl =>
-                wl.wordListName.toLowerCase().includes(search.toLowerCase())
-            );
-        }
-
-        const total = filteredWordLists.length;
-        const startIndex = (page - 1) * limit;
-        const endIndex = startIndex + parseInt(limit);
-        const paginatedWordLists = filteredWordLists.slice(startIndex, endIndex);
-
-        return {
-            wordLists: paginatedWordLists,
-            pagination: {
-                current: parseInt(page),
-                pageSize: parseInt(limit),
-                total,
-                pages: Math.ceil(total / limit)
+            // 添加搜索条件
+            if (search) {
+                whereCondition[Op.or] = [
+                    {
+                        wordListName: {
+                            [Op.like]: `%${search}%`
+                        }
+                    },
+                    {
+                        description: {
+                            [Op.like]: `%${search}%`
+                        }
+                    },
+                    {
+                        categories: {
+                            [Op.like]: `%${search}%`
+                        }
+                    }
+                ];
             }
-        };
+
+            // 计算分页偏移量
+            const offset = (page - 1) * limit;
+
+            // 查询词单列表
+            const { count, rows: wordlists } = await db.wordlist.findAndCountAll({
+                where: whereCondition,
+                limit: parseInt(limit),
+                offset: offset,
+                order: [
+                    ['isSystemBuiltIn', 'DESC'],  // 系统词单排在前面
+                    ['createTime', 'DESC']      // 最新创建的排在前面
+                ],
+                attributes: [
+                    'id',
+                    'wordListName',
+                    'categories',
+                    'description',
+                    'isSystemBuiltIn',
+                    'createTime',
+                    'updateTime'
+                ]
+            });
+
+            // 格式化返回数据
+            const formattedWordLists = wordlists.map(wordlist => {
+                // 计算词单中的单词数量（这里先返回0，实际项目中可以通过关联查询获得）
+                const wordCount = 0; // TODO: 后续实现关联查询获取真实单词数量
+
+                return {
+                    wordListId: wordlist.id,
+                    wordListName: wordlist.wordListName,
+                    description: wordlist.description,
+                    wordCount: wordCount,
+                    isSystem: wordlist.isSystemBuiltIn === 1,
+                    creator: null, // TODO: 后续实现关联查询获取创建者信息
+                    createdAt: wordlist.createTime.toISOString(),
+                    updatedAt: wordlist.updateTime.toISOString()
+                };
+            });
+
+            // 返回分页结果
+            return {
+                wordLists: formattedWordLists,
+                pagination: {
+                    current: parseInt(page),
+                    pageSize: parseInt(limit),
+                    total: count,
+                    pages: Math.ceil(count / limit)
+                }
+            };
+
+        } catch (error) {
+            console.error('获取词单列表失败:', error);
+            throw new BusinessException('获取词单列表失败: ' + error.message);
+        }
     }
 
     /**
@@ -81,46 +111,44 @@ class WordListService {
      * @returns {Promise<Object>} 词单详情
      */
     static async getWordListDetail(wordListId) {
-        // TODO: 实际实现应该查询数据库，这里返回模拟数据
-        const mockWordLists = {
-            1: {
-                wordListId: 1,
-                wordListName: 'CET-4 核心词汇',
-                description: '大学英语四级考试核心词汇，包含最常考的2000个单词',
-                wordCount: 2000,
-                isSystem: true,
-                creator: null,
-                createdAt: '2025-11-01T10:00:00Z',
-                updatedAt: '2025-11-01T10:00:00Z'
-            },
-            2: {
-                wordListId: 2,
-                wordListName: 'CET-6 高频词汇',
-                description: '大学英语六级考试高频词汇，精选1500个重点单词',
-                wordCount: 1500,
-                isSystem: true,
-                creator: null,
-                createdAt: '2025-11-02T10:00:00Z',
-                updatedAt: '2025-11-02T10:00:00Z'
-            },
-            3: {
-                wordListId: 3,
-                wordListName: '我的生词本',
-                description: '学习过程中遇到的生词，需要重点记忆',
-                wordCount: 120,
-                isSystem: false,
-                creator: { id: 2, username: 'testuser_updated' },
-                createdAt: '2025-11-10T15:30:00Z',
-                updatedAt: '2025-11-14T20:15:00Z'
+        try {
+            // 查询词单详情
+            const wordlist = await db.wordlist.findOne({
+                where: {
+                    id: wordListId,
+                    isDelete: 0
+                },
+                attributes: [
+                    'id',
+                    'wordListName',
+                    'categories',
+                    'description',
+                    'isSystemBuiltIn',
+                    'createTime',
+                    'updateTime'
+                ]
+            });
+
+            if (!wordlist) {
+                throw new NotFoundException('词单不存在');
             }
-        };
 
-        const wordList = mockWordLists[wordListId];
-        if (!wordList) {
-            throw new NotFoundException('词单不存在');
+            // 格式化返回数据
+            return {
+                wordListId: wordlist.id,
+                wordListName: wordlist.wordListName,
+                description: wordlist.description,
+                wordCount: 0, // TODO: 后续实现关联查询获取真实单词数量
+                isSystem: wordlist.isSystemBuiltIn === 1,
+                creator: null, // TODO: 后续实现关联查询获取创建者信息
+                createdAt: wordlist.createTime.toISOString(),
+                updatedAt: wordlist.updateTime.toISOString()
+            };
+
+        } catch (error) {
+            console.error('获取词单详情失败:', error);
+            throw new BusinessException('获取词单详情失败: ' + error.message);
         }
-
-        return wordList;
     }
 
     /**
