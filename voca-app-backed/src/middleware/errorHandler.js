@@ -1,4 +1,4 @@
-const ResponseUtil = require('../utils/ResponseUtil');
+const ResponseUtil = require('../utils/responseUtil');
 const {
     CustomException,
     ValidationException,
@@ -7,7 +7,7 @@ const {
     NotFoundException,
     ConflictException,
     BusinessException
-} = require('../exceptions/CustomException');
+} = require('../exceptions/customException');
 
 /**
  * 全局异常处理中间件

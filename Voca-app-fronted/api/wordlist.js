@@ -21,7 +21,13 @@ const WORDLIST_API = {
   // 添加单词到词单
   ADD_WORDS: '/wordlist',
   // 从词单移除单词
-  REMOVE_WORD: '/wordlist'
+  REMOVE_WORD: '/wordlist',
+  // 添加词单到用户词单列表
+  ADD_USER_WORDLIST: '/user-wordlist',
+  // 从用户词单列表移除词单
+  REMOVE_USER_WORDLIST: '/user-wordlist',
+  // 获取用户已添加的词单列表
+  MY_WORDLISTS: '/user-wordlist/my'
 };
 
 /**
@@ -126,6 +132,36 @@ export class WordlistAPI {
       this.removeWordFromWordlist(id, wordId)
     );
     return Promise.all(promises);
+  }
+
+  /**
+   * 添加词单到用户词单列表
+   * @param {number} wordListId 词单ID
+   * @returns {Promise<Object>} 添加结果
+   */
+  async addUserWordlist(wordListId) {
+    return request.post(WORDLIST_API.ADD_USER_WORDLIST, { wordListId });
+  }
+
+  /**
+   * 从用户词单列表移除词单
+   * @param {number} wordListId 词单ID
+   * @returns {Promise<Object>} 移除结果
+   */
+  async removeUserWordlist(wordListId) {
+    return request.delete(`${WORDLIST_API.REMOVE_USER_WORDLIST}/${wordListId}`);
+  }
+
+  /**
+   * 获取用户已添加的词单列表
+   * @param {Object} params 查询参数
+   * @param {number} params.page 页码
+   * @param {number} params.limit 每页数量
+   * @param {string} params.search 搜索关键词
+   * @returns {Promise<Object>} 用户词单列表
+   */
+  async getMyWordlists(params = {}) {
+    return request.get(WORDLIST_API.MY_WORDLISTS, params);
   }
 }
 

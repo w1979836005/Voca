@@ -1,5 +1,5 @@
-const JwtUtil = require('../utils/JwtUtil');
-const { AuthenticationException, AuthorizationException } = require('../exceptions/CustomException');
+const JwtUtil = require('../utils/jwtUtil');
+const { AuthenticationException, AuthorizationException } = require('../exceptions/customException');
 
 /**
  * JWT 认证中间件

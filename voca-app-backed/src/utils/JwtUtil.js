@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const { AuthenticationException } = require('../exceptions/CustomException');
+const { AuthenticationException } = require('../exceptions/customException');
 
 /**
  * JWT 工具类

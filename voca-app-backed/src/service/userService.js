@@ -1,6 +1,6 @@
 const db = require('../model/index.js');
-const CryptoUtil = require('../utils/CryptoUtil');
-const { NotFoundException, BusinessException } = require('../exceptions/CustomException');
+const CryptoUtil = require('../utils/cryptoUtil');
+const { NotFoundException, BusinessException } = require('../exceptions/customException');
 
 /**
  * 用户服务类

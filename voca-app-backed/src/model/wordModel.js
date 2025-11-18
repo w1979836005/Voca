@@ -22,20 +22,15 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: false,
             comment: '释义'
         },
-        translation: {
-            type: DataTypes.TEXT,
-            allowNull: true,
-            comment: '中文翻译'
-        },
         exampleSentence: {
             type: DataTypes.TEXT,
             allowNull: true,
             comment: '例句'
         },
-        exampleSentenceTranslation: {
+        affixes: {
             type: DataTypes.TEXT,
             allowNull: true,
-            comment: '例句翻译'
+            comment: '词缀拆分信息'
         },
         audioUrl: {
             type: DataTypes.STRING(255),

@@ -1,5 +1,5 @@
 const db = require('../model/index.js');
-const { NotFoundException, BusinessException } = require('../exceptions/CustomException');
+const { NotFoundException, BusinessException } = require('../exceptions/customException');
 
 /**
  * 学习服务类
@@ -64,28 +64,28 @@ class LearningService {
             {
                 wordId: 1,
                 word: 'abandon',
-                pronunciation: '/əˈbændən/',
+                phonetic: '/əˈbændən/',
                 definition: 'v. 放弃，抛弃',
-                translation: '放弃，抛弃',
-                example: 'We had to abandon the car and walk.',
+                affixes: 'ab- + andon',
+                exampleSentence: 'We had to abandon the car and walk.',
                 difficulty: 3
             },
             {
                 wordId: 2,
                 word: 'ability',
-                pronunciation: '/əˈbɪləti/',
+                phonetic: '/əˈbɪləti/',
                 definition: 'n. 能力，才能',
-                translation: '能力，才能',
-                example: 'She has the ability to solve complex problems.',
+                affixes: 'abil + -ity',
+                exampleSentence: 'She has the ability to solve complex problems.',
                 difficulty: 2
             },
             {
                 wordId: 3,
                 word: 'absent',
-                pronunciation: '/ˈæbsənt/',
+                phonetic: '/ˈæbsənt/',
                 definition: 'adj. 缺席的，不在的',
-                translation: '缺席的，不在的',
-                example: 'He was absent from school yesterday.',
+                affixes: 'ab- + sent',
+                exampleSentence: 'He was absent from school yesterday.',
                 difficulty: 1
             }
         ];
@@ -115,10 +115,10 @@ class LearningService {
             {
                 wordId: 1,
                 word: 'abandon',
-                pronunciation: '/əˈbændən/',
+                phonetic: '/əˈbændən/',
                 definition: 'v. 放弃，抛弃',
-                translation: '放弃，抛弃',
-                example: 'We had to abandon the car and walk.',
+                affixes: 'ab- + andon',
+                exampleSentence: 'We had to abandon the car and walk.',
                 difficulty: 3,
                 options: [
                     { id: 'a', text: '放弃，抛弃' },

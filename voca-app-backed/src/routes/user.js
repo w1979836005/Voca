@@ -23,6 +23,12 @@ router.post('/avatar',
     UserController.uploadAvatar
 );
 
+// 删除头像 - 需要认证
+router.delete('/avatar',
+    authenticateToken,
+    UserController.deleteAvatar
+);
+
 // 获取学习统计 - 不需要验证参数，只需要认证
 router.get('/stats', authenticateToken, UserController.getUserStats);
 

@@ -74,12 +74,12 @@
 						<view class="card-right">
 							<view class="card-actions">
 								<wd-button
-									:type="isInMyWordlist(item.wordListId) ? 'info' : 'primary'"
+									:type="item.joined ? 'info' : 'primary'"
 									size="small"
 									round
 									@click.stop="toggleWordlist(item)"
 								>
-									{{ isInMyWordlist(item.wordListId) ? '已添加' : '添加' }}
+									{{ item.joined ? '已添加' : '添加' }}
 								</wd-button>
 							</view>
 						</view>
@@ -140,9 +140,6 @@ const debouncedSearch = () => {
 	}, 500) // 500ms防抖延迟
 }
 
-// 用户已加入的词单列表
-const myWordlistIds = ref([1, 3]) // 模拟用户已添加的词单ID
-
 // 分页相关
 const pageSize = 10
 const currentPage = ref(1)
@@ -172,29 +169,46 @@ const displayWordlist = computed(() => {
 	return wordlistData.value
 })
 
-// 检查词单是否已添加
-const isInMyWordlist = (wordListId: number) => {
-	return myWordlistIds.value.includes(wordListId)
-}
-
 // 添加或移除词单
 const toggleWordlist = async (item: any) => {
-	const wordListId = item.wordListId
-	const index = myWordlistIds.value.indexOf(wordListId)
+	try {
+		if (item.joined) {
+			// 移除词单
+			await wordlistAPI.removeUserWordlist(item.wordListId)
+			uni.showToast({
+				title: '已移除词单',
+				icon: 'success'
+			})
 
-	if (index > -1) {
-		// 移除词单
-		myWordlistIds.value.splice(index, 1)
+			// 通知首页刷新词单列表
+			uni.$emit('wordlistChanged', {
+				action: 'remove',
+				wordListId: item.wordListId,
+				wordListName: item.wordListName
+			})
+		} else {
+			// 添加词单
+			await wordlistAPI.addUserWordlist(item.wordListId)
+			uni.showToast({
+				title: '已添加词单',
+				icon: 'success'
+			})
+
+			// 通知首页刷新词单列表
+			uni.$emit('wordlistChanged', {
+				action: 'add',
+				wordListId: item.wordListId,
+				wordListName: item.wordListName
+			})
+		}
+
+		// 重新加载词单列表以获取最新状态
+		await loadWordlists(true)
+	} catch (error) {
+		console.error('操作失败:', error)
 		uni.showToast({
-			title: '已移除词单',
-			icon: 'success'
-		})
-	} else {
-		// 添加词单
-		myWordlistIds.value.push(wordListId)
-		uni.showToast({
-			title: '已添加词单',
-			icon: 'success'
+			title: '操作失败',
+			icon: 'none'
 		})
 	}
 }
@@ -383,6 +397,7 @@ page {
 	font-family: 'Itim', 'Lexend', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 	font-size: 24rpx;
 	color: #666666;
+	width: 120rpx;
 	background: #f0f0f0;
 	padding: 4rpx 12rpx;
 	border-radius: 12rpx;

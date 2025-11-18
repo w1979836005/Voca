@@ -1,7 +1,7 @@
 const Joi = require('joi');
 const LearningService = require('../service/learningService');
 const { asyncHandler } = require('../middleware/errorHandler');
-const ResponseUtil = require('../utils/ResponseUtil');
+const ResponseUtil = require('../utils/responseUtil');
 
 /**
  * 学习控制器

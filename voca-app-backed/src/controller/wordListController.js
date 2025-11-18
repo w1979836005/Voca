@@ -1,7 +1,7 @@
 const Joi = require('joi');
 const WordListService = require('../service/wordListService');
 const { asyncHandler } = require('../middleware/errorHandler');
-const ResponseUtil = require('../utils/ResponseUtil');
+const ResponseUtil = require('../utils/responseUtil');
 
 /**
  * 词单控制器
@@ -12,11 +12,15 @@ class WordListController {
      */
     static getWordLists = asyncHandler(async (req, res) => {
         const { page, limit, type, search } = req.query;
+        // 从认证信息中获取用户ID（如果已认证）
+        const userId = req.user?.userId || null;
+
         const wordLists = await WordListService.getWordLists({
             page: parseInt(page) || 1,
             limit: parseInt(limit) || 10,
             type: type || 'all',
-            search: search || ''
+            search: search || '',
+            userId: userId
         });
 
         res.json(ResponseUtil.success(wordLists, '获取词单列表成功'));
@@ -27,7 +31,10 @@ class WordListController {
      */
     static getWordListDetail = asyncHandler(async (req, res) => {
         const { id } = req.params;
-        const wordList = await WordListService.getWordListDetail(parseInt(id));
+        // 从认证信息中获取用户ID（如果已认证）
+        const userId = req.user?.userId || null;
+
+        const wordList = await WordListService.getWordListDetail(parseInt(id), userId);
 
         res.json(ResponseUtil.success(wordList, '获取词单详情成功'));
     });
@@ -125,6 +132,46 @@ class WordListController {
 
         res.json(ResponseUtil.success(result, '移除单词成功'));
     });
+
+    /**
+     * 添加词单到用户词单列表
+     */
+    static addUserWordList = asyncHandler(async (req, res) => {
+        const userId = req.user.userId;
+        const { wordListId } = req.body;
+
+        const result = await WordListService.addUserWordList(parseInt(wordListId), userId);
+
+        res.json(ResponseUtil.success(result, '添加词单成功'));
+    });
+
+    /**
+     * 从用户词单列表移除词单
+     */
+    static removeUserWordList = asyncHandler(async (req, res) => {
+        const userId = req.user.userId;
+        const { wordListId } = req.params;
+
+        const result = await WordListService.removeUserWordList(parseInt(wordListId), userId);
+
+        res.json(ResponseUtil.success(result, '移除词单成功'));
+    });
+
+    /**
+     * 获取用户已添加的词单列表（仅返回已添加的词单）
+     */
+    static getMyWordLists = asyncHandler(async (req, res) => {
+        const userId = req.user.userId;
+        const { page, limit, search } = req.query;
+
+        const wordLists = await WordListService.getMyWordLists(userId, {
+            page: parseInt(page) || 1,
+            limit: parseInt(limit) || 50, // 默认返回更多，用于弹窗选择
+            search: search || ''
+        });
+
+        res.json(ResponseUtil.success(wordLists, '获取我的词单列表成功'));
+    });
 }
 
 // 定义验证规则
@@ -160,6 +207,10 @@ const validationRules = {
 
     addWordsToWordList: Joi.object({
         wordIds: Joi.array().items(Joi.number().integer().positive()).min(1).max(100).required()
+    }),
+
+    addUserWordList: Joi.object({
+        wordListId: Joi.number().integer().positive().required()
     })
 };
 

@@ -4,7 +4,7 @@ require('dotenv').config()
 const express = require('express')
 const db = require('./model/index.js')
 const { errorHandler, asyncHandler, notFoundHandler } = require('./middleware/errorHandler')
-const ResponseUtil = require('./utils/ResponseUtil')
+const ResponseUtil = require('./utils/responseUtil')
 
 const app = express()
 
@@ -13,7 +13,7 @@ app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 
 // 静态文件服务 - 提供上传文件的访问
-app.use('/uploads', express.static('uploads'))
+app.use('/uploads', express.static('uploads'));
 
 // 请求日志中间件
 app.use((req, res, next) => {
@@ -42,6 +42,7 @@ const testRoutes = require('./routes/test.js')
 const authRoutes = require('./routes/auth.js')
 const userRoutes = require('./routes/user.js')
 const wordlistRoutes = require('./routes/wordlist.js')
+const userWordlistRoutes = require('./routes/userWordlist.js')
 const learningRoutes = require('./routes/learning.js')
 
 // 注册路由
@@ -49,13 +50,14 @@ app.use('/api/test', testRoutes)
 app.use('/api/auth', authRoutes)
 app.use('/api/user', userRoutes)
 app.use('/api/wordlist', wordlistRoutes)
+app.use('/api/user-wordlist', userWordlistRoutes)
 app.use('/api/learning', learningRoutes)
 
 const port = process.env.PORT || 3001
 
 // 基础路由
 app.get('/', (req, res) => {
-    res.json(ResponseUtil.success(null, 'Voca 背单词应用 API 服务'))
+    res.json(ResponseUtil.success(null, 'Voca 背单词应用 API 服务'));
 })
 
 // 数据库连接测试路由
@@ -64,7 +66,7 @@ app.get('/api/test-db', asyncHandler(async (req, res) => {
     res.json(ResponseUtil.success({
         status: 'connected',
         database: process.env.DB_NAME
-    }, '数据库连接成功'))
+    }, '数据库连接成功'));
 }))
 
 // 404 处理

@@ -2,7 +2,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
-const { ValidationException, BusinessException } = require('../exceptions/CustomException');
+const { ValidationException, BusinessException } = require('../exceptions/customException');
 
 /**
  * 文件上传中间件配置
@@ -76,13 +76,13 @@ const storage = multer.diskStorage({
 const memoryStorage = multer.memoryStorage();
 
 /**
- * 头像上传中间件
+ * 头像上传中间件 - 使用内存存储（用于MinIO上传）
  */
 const uploadAvatar = multer({
-    storage: storage,
+    storage: memoryStorage,
     fileFilter: fileFilter,
     limits: {
-        fileSize: 2 * 1024 * 1024, // 2MB限制
+        fileSize: 5 * 1024 * 1024, // 5MB限制（匹配MinIO限制）
         files: 1 // 只允许上传一个文件
     }
 }).single('avatar');

@@ -1,5 +1,5 @@
 const bcrypt = require('bcryptjs');
-const { BusinessException } = require('../exceptions/CustomException');
+const { BusinessException } = require('../exceptions/customException');
 
 /**
  * 加密工具类

@@ -1,4 +1,4 @@
-const { ValidationException } = require('../exceptions/CustomException');
+const { ValidationException } = require('../exceptions/customException');
 
 /**
  * 验证请求体参数

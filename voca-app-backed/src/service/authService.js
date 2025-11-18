@@ -1,7 +1,7 @@
 const db = require('../model/index.js');
-const CryptoUtil = require('../utils/CryptoUtil');
-const JwtUtil = require('../utils/JwtUtil');
-const { ConflictException, NotFoundException, AuthenticationException, BusinessException } = require('../exceptions/CustomException');
+const CryptoUtil = require('../utils/cryptoUtil');
+const JwtUtil = require('../utils/jwtUtil');
+const { ConflictException, NotFoundException, AuthenticationException, BusinessException } = require('../exceptions/customException');
 
 // 临时验证码存储（开发环境）
 const verificationCodes = new Map();

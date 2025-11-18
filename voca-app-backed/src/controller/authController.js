@@ -1,6 +1,6 @@
 const Joi = require('joi');
 const AuthService = require('../service/authService');
-const ResponseUtil = require('../utils/ResponseUtil');
+const ResponseUtil = require('../utils/responseUtil');
 const { asyncHandler } = require('../middleware/errorHandler');
 
 /**

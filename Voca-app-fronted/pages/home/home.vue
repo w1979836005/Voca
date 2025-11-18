@@ -159,20 +159,35 @@
 					<wd-icon name="cross" size="24" color="#666666" @click="closeWordListPopup"></wd-icon>
 				</view>
 				<view class="wordlist-list">
-					<view
-						class="wordlist-item"
-						:class="{ 'wordlist-item-current': item.name === currentWordlist }"
-						v-for="(item, index) in wordLists"
-						:key="index"
-						@click="selectWordList(item)"
-					>
-						<view class="item-content">
-							<text class="item-name">{{ item.name }}</text>
-							<text class="item-count">{{ item.wordCount }} 词</text>
+					<!-- 加载状态 -->
+					<view v-if="loadingWordLists" class="loading-container">
+						<wd-loading type="spinner" size="20px" />
+						<text class="loading-text">加载中...</text>
+					</view>
+
+					<!-- 词单列表 -->
+					<view v-else-if="wordLists.length > 0">
+						<view
+							class="wordlist-item"
+							:class="{ 'wordlist-item-current': item.wordListId === currentWordlistId }"
+							v-for="(item, index) in wordLists"
+							:key="item.wordListId"
+							@click="selectWordList(item)"
+						>
+							<view class="item-content">
+								<text class="item-name">{{ item.wordListName }}</text>
+								<text class="item-count">{{ item.wordCount }} 词</text>
+							</view>
+							<view class="item-status" v-if="item.wordListId === currentWordlistId">
+								<wd-icon name="check" size="20" color="#000000"></wd-icon>
+							</view>
 						</view>
-						<view class="item-status" v-if="item.name === currentWordlist">
-							<wd-icon name="check" size="20" color="#000000"></wd-icon>
-						</view>
+					</view>
+
+					<!-- 空状态 -->
+					<view v-else class="empty-container">
+						<text class="empty-text">暂无词单</text>
+						<text class="empty-desc">请先去词单页面添加词单</text>
 					</view>
 				</view>
 			</view>
@@ -183,6 +198,7 @@
 import { reactive, computed, ref, onMounted, onUnmounted } from 'vue'
 import CustomTabbar from '@/components/custom-tabbar/custom-tabbar.vue'
 import { auth } from '@/utils/index.js'
+import { wordlistAPI } from '@/api/wordlist.js'
 
 // 用户数据
 const userName = ref('用户')
@@ -192,8 +208,15 @@ const greetingText = ref('早上好')
 
 // 当前词单
 const currentWordlist = computed(() => {
-	const current = allWordLists.find(item => item.id === currentWordlistId.value)
-	return current ? current.name : 'CET-4核心词汇'
+	if (currentWordlistInfo.value) {
+		return currentWordlistInfo.value.wordListName
+	}
+	// 如果没有当前词单信息，从词单列表中找第一个当前词单或第一个词单
+	if (wordLists.value.length > 0) {
+		const currentWordlist = wordLists.value.find(item => item.isCurrent) || wordLists.value[0]
+		return currentWordlist.wordListName
+	}
+	return '暂无词单'
 })
 
 // 学习进度数据
@@ -232,26 +255,15 @@ const currentQuote = reactive({
 const showWordListPopup = ref(false)
 const isIconRotated = ref(false)
 
-// 所有可用词单数据
-const allWordLists = reactive([
-	{ id: 'wordlist-1', name: 'CET-4核心词汇', wordCount: 4500 },
-	{ id: 'wordlist-2', name: 'CET-6核心词汇', wordCount: 2500 },
-	{ id: 'wordlist-3', name: '雅思核心词汇', wordCount: 3500 },
-	{ id: 'wordlist-4', name: '托福核心词汇', wordCount: 3000 },
-	{ id: 'wordlist-5', name: '商务英语词汇', wordCount: 2000 },
-	{ id: 'wordlist-6', name: '日常口语词汇', wordCount: 1500 }
-])
-
 // 用户已加入的词单列表
-const myWordlistIds = ref(['wordlist-1', 'wordlist-3', 'wordlist-5'])
+const wordLists = ref([])
+const loadingWordLists = ref(false)
 
-// 当前词单ID
-const currentWordlistId = ref('wordlist-1')
+// 当前词单ID（从本地存储获取）
+const currentWordlistId = ref(uni.getStorageSync('currentWordlistId') || null)
 
-// 计算用户已加入的词单列表
-const wordLists = computed(() => {
-	return allWordLists.filter(item => myWordlistIds.value.includes(item.id))
-})
+// 当前词单信息
+const currentWordlistInfo = ref(null)
 
 // 更新问候语
 const updateGreeting = () => {
@@ -327,18 +339,77 @@ const closeWordListPopup = () => {
 }
 
 // 选择词单
-const selectWordList = (item: any) => {
-	currentWordlist.value = item.name
-	showWordListPopup.value = false
-	isIconRotated.value = false
+const selectWordList = async (item: any) => {
+	try {
+		// 更新当前词单信息
+		currentWordlistInfo.value = item
+		currentWordlistId.value = item.wordListId
 
-	// 重新加载该词单的学习数据
-	loadWordlistProgress()
+		// 保存到本地存储
+		uni.setStorageSync('currentWordlistId', item.wordListId)
 
-	uni.showToast({
-		title: `已切换到${item.name}`,
-		icon: 'success'
-	})
+		// 关闭弹窗
+		showWordListPopup.value = false
+		isIconRotated.value = false
+
+		// 重新加载该词单的学习数据
+		loadWordlistProgress()
+
+		uni.showToast({
+			title: `已切换到${item.wordListName}`,
+			icon: 'success'
+		})
+	} catch (error) {
+		console.error('切换词单失败:', error)
+		uni.showToast({
+			title: '切换失败',
+			icon: 'none'
+		})
+	}
+}
+
+// 加载用户词单列表
+const loadMyWordLists = async () => {
+	try {
+		loadingWordLists.value = true
+		const response = await wordlistAPI.getMyWordlists({ limit: 50 })
+
+		if (response.code === 200 && response.data) {
+			wordLists.value = response.data.wordLists || []
+
+			// 设置当前词单信息
+			if (currentWordlistId.value) {
+				const currentWordlist = wordLists.value.find(item => item.wordListId === currentWordlistId.value)
+				if (currentWordlist) {
+					currentWordlistInfo.value = currentWordlist
+				} else {
+					// 如果本地存储的词单ID不在列表中，重置为第一个词单或当前词单
+					const firstWordlist = wordLists.value.find(item => item.isCurrent) || wordLists.value[0]
+					if (firstWordlist) {
+						currentWordlistId.value = firstWordlist.wordListId
+						currentWordlistInfo.value = firstWordlist
+						uni.setStorageSync('currentWordlistId', firstWordlist.wordListId)
+					}
+				}
+			} else {
+				// 如果没有当前词单ID，选择第一个词单或当前词单
+				const firstWordlist = wordLists.value.find(item => item.isCurrent) || wordLists.value[0]
+				if (firstWordlist) {
+					currentWordlistId.value = firstWordlist.wordListId
+					currentWordlistInfo.value = firstWordlist
+					uni.setStorageSync('currentWordlistId', firstWordlist.wordListId)
+				}
+			}
+		}
+	} catch (error) {
+		console.error('加载用户词单列表失败:', error)
+		uni.showToast({
+			title: '加载词单失败',
+			icon: 'none'
+		})
+	} finally {
+		loadingWordLists.value = false
+	}
 }
 
 // 加载词单进度
@@ -391,6 +462,7 @@ onMounted(() => {
 	getRandomQuote()
 	loadWordlistProgress()
 	loadUserInfo()
+	loadMyWordLists() // 加载用户词单列表
 	updateGreeting()
 
 	// 每分钟更新一次问候语，确保跨时段时自动更新
@@ -403,11 +475,41 @@ onMounted(() => {
 		console.log('首页收到用户信息更新事件，刷新用户名')
 		loadUserInfo()
 	})
+
+	// 监听词单变化事件
+	uni.$on('wordlistChanged', (data) => {
+		console.log('首页收到词单变化事件:', data)
+		// 刷新词单列表
+		loadMyWordLists()
+
+		// 如果移除的是当前词单，需要重新设置当前词单
+		if (data.action === 'remove' && data.wordListId === currentWordlistId.value) {
+			console.log('当前词单被移除，需要重新设置')
+			// 从本地存储中移除
+			uni.removeStorageSync('currentWordlistId')
+			currentWordlistId.value = null
+			currentWordlistInfo.value = null
+
+			// 显示提示
+			uni.showToast({
+				title: '当前词单已被移除',
+				icon: 'none'
+			})
+		}
+	})
+
+	// 页面显示时刷新词单列表（确保数据最新）
+	uni.$on('onShow', () => {
+		console.log('首页显示，刷新词单列表')
+		loadMyWordLists()
+	})
 })
 
 // 组件卸载时移除事件监听
 onUnmounted(() => {
 	uni.$off('userProfileUpdated')
+	uni.$off('wordlistChanged')
+	uni.$off('onShow')
 })
 
 </script>
@@ -784,6 +886,46 @@ page {
 		justify-content: center;
 		width: 40rpx;
 		height: 40rpx;
+	}
+}
+
+/* 加载状态 */
+.loading-container {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 60rpx 0;
+	gap: 20rpx;
+
+	.loading-text {
+		font-family: $voca-primary-font;
+		font-size: 26rpx;
+		color: #666666;
+	}
+}
+
+/* 空状态 */
+.empty-container {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 80rpx 40rpx;
+	text-align: center;
+
+	.empty-text {
+		font-family: $voca-primary-font;
+		font-size: 28rpx;
+		color: #666666;
+		margin-bottom: 12rpx;
+	}
+
+	.empty-desc {
+		font-family: $voca-primary-font;
+		font-size: 24rpx;
+		color: #999999;
+		line-height: 1.4;
 	}
 }
 </style>

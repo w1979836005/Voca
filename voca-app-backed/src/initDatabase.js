@@ -96,7 +96,7 @@ async function createBasicData() {
         if (userCount === 0) {
             console.log('创建测试用户...');
 
-            const CryptoUtil = require('./utils/CryptoUtil');
+            const CryptoUtil = require('./utils/cryptoUtil');
 
             // 创建测试用户
             const testUsers = [
@@ -136,45 +136,40 @@ async function createBasicData() {
                     word: 'abandon',
                     phonetic: '/əˈbændən/',
                     definition: '放弃；抛弃；遗弃',
-                    translation: '放弃，抛弃',
+                    affixes: 'ab- + andon',
                     exampleSentence: 'They had to abandon their car in the snow.',
-                    exampleSentenceTranslation: '他们不得不把车遗弃在雪地里。',
                     difficulty: 3
                 },
                 {
                     word: 'ability',
                     phonetic: '/əˈbɪlɪti/',
                     definition: '能力；才能；本领',
-                    translation: '能力，才能',
+                    affixes: 'abil + -ity',
                     exampleSentence: 'She has the ability to solve complex problems.',
-                    exampleSentenceTranslation: '她有解决复杂问题的能力。',
                     difficulty: 2
                 },
                 {
                     word: 'absent',
                     phonetic: '/ˈæbsənt/',
                     definition: '缺席的；不在的',
-                    translation: '缺席的，不在的',
+                    affixes: 'ab- + sent',
                     exampleSentence: 'He was absent from the meeting.',
-                    exampleSentenceTranslation: '他缺席了会议。',
                     difficulty: 2
                 },
                 {
                     word: 'absolute',
                     phonetic: '/ˈæbsəluːt/',
                     definition: '绝对的；完全的；无条件的',
-                    translation: '绝对的，完全的',
+                    affixes: 'ab- + solute',
                     exampleSentence: 'I have absolute confidence in you.',
-                    exampleSentenceTranslation: '我对你有绝对的信心。',
                     difficulty: 3
                 },
                 {
                     word: 'absorb',
-                    phonetic: '/əbˈsɔːrb/',
+                    phonetic: '/əbˈzɔːrb/',
                     definition: '吸收；吸引；使专心',
-                    translation: '吸收，吸引',
+                    affixes: 'ab- + sorb',
                     exampleSentence: 'Plants absorb water through their roots.',
-                    exampleSentenceTranslation: '植物通过根部吸收水分。',
                     difficulty: 3
                 }
             ];
@@ -196,7 +191,7 @@ async function createBasicData() {
                 const wordListWordAssociations = createdWords.map(word => ({
                     wordListId: cet4Wordlist.id,
                     wordId: word.id
-                }));
+                }');
 
                 await db.word_list_word.bulkCreate(wordListWordAssociations);
                 console.log(`✓ 为CET-4词单添加了 ${wordListWordAssociations.length} 个单词`);
