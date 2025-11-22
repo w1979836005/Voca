@@ -44,6 +44,7 @@ const userRoutes = require('./routes/user.js')
 const wordlistRoutes = require('./routes/wordlist.js')
 const userWordlistRoutes = require('./routes/userWordlist.js')
 const learningRoutes = require('./routes/learning.js')
+const debugRoutes = require('./routes/debug.js')
 
 // 注册路由
 app.use('/api/test', testRoutes)
@@ -52,8 +53,9 @@ app.use('/api/user', userRoutes)
 app.use('/api/wordlist', wordlistRoutes)
 app.use('/api/user-wordlist', userWordlistRoutes)
 app.use('/api/learning', learningRoutes)
+app.use('/api/debug', debugRoutes) // 添加调试路由
 
-const port = process.env.PORT || 3001
+const port = process.env.PORT || 3000
 
 // 基础路由
 app.get('/', (req, res) => {

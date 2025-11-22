@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音频播放测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .test-item {
+            background: #f5f5f5;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .status {
+            margin-left: 10px;
+            color: #666;
+        }
+        .word-info {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .audio-url {
+            font-size: 12px;
+            color: #888;
+            word-break: break-all;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>音频播放测试</h1>
+    <p>测试不同环境下的音频播放功能</p>
+
+    <div id="test-results">
+        <p>正在加载数据...</p>
+    </div>
+
+    <script>
+        // 测试音频播放
+        async function testAudioPlay() {
+            const resultsDiv = document.getElementById('test-results');
+
+            try {
+                // 获取词单单词数据
+                const response = await fetch('http://localhost:3000/api/wordlist/1/words?page=1&limit=5');
+                const data = await response.json();
+
+                if (data.code !== 200) {
+                    resultsDiv.innerHTML = `<p style="color: red;">获取数据失败: ${data.message}</p>`;
+                    return;
+                }
+
+                let html = '<h2>测试结果:</h2>';
+
+                data.data.words.forEach((word, index) => {
+                    html += `
+                        <div class="test-item">
+                            <div class="word-info">${index + 1}. ${word.word} ${word.pronunciation || ''}</div>
+                            <div class="audio-url">音频URL: ${word.audioUrl || '无'}</div>
+                            <button onclick="testPlayAudio('${word.audioUrl}', '${word.word}')">测试播放</button>
+                            <button onclick="testTTS('${word.word}')">测试TTS</button>
+                            <span class="status" id="status-${index}"></span>
+                        </div>
+                    `;
+                });
+
+                resultsDiv.innerHTML = html;
+
+            } catch (error) {
+                resultsDiv.innerHTML = `<p style="color: red;">测试失败: ${error.message}</p>`;
+            }
+        }
+
+        // 测试音频播放
+        function testPlayAudio(audioUrl, word) {
+            const statusSpan = document.querySelector(`[onclick*="${word}"]`).nextElementSibling.nextElementSibling;
+
+            if (!audioUrl || audioUrl.trim() === '') {
+                statusSpan.textContent = '❌ 无音频URL，使用TTS';
+                testTTS(word);
+                return;
+            }
+
+            statusSpan.textContent = '🔄 正在加载音频...';
+
+            try {
+                const audio = new Audio(audioUrl);
+
+                audio.addEventListener('canplay', () => {
+                    statusSpan.textContent = '✅ 音频可以播放，正在播放...';
+                    audio.play();
+                });
+
+                audio.addEventListener('play', () => {
+                    statusSpan.textContent = '🔊 正在播放 ' + word;
+                });
+
+                audio.addEventListener('ended', () => {
+                    statusSpan.textContent = '✅ 播放完成';
+                });
+
+                audio.addEventListener('error', (e) => {
+                    console.error('音频播放错误:', e);
+                    statusSpan.textContent = '❌ 音频播放失败，尝试TTS';
+                    testTTSDirect(word);
+                });
+
+                audio.load();
+
+            } catch (error) {
+                console.error('音频播放异常:', error);
+                statusSpan.textContent = '❌ 音频播放异常，尝试TTS';
+                testTTSDirect(word);
+            }
+        }
+
+        // 直接测试TTS
+        function testTTS(word) {
+            const statusSpan = document.querySelector(`[onclick*="${word}"]`).nextElementSibling.nextElementSibling;
+            testTTSDirect(word, statusSpan);
+        }
+
+        function testTTSDirect(word, statusSpan) {
+            if (!statusSpan) {
+                const buttons = document.querySelectorAll('button');
+                buttons.forEach(btn => {
+                    if (btn.textContent.includes('测试TTS') && btn.onclick && btn.onclick.toString().includes(word)) {
+                        statusSpan = btn.nextElementSibling;
+                    }
+                });
+            }
+
+            if ('speechSynthesis' in window) {
+                try {
+                    const utterance = new SpeechSynthesisUtterance(word);
+                    utterance.lang = 'en-US';
+                    utterance.rate = 0.8;
+
+                    utterance.onstart = () => {
+                        if (statusSpan) statusSpan.textContent = '🔊 使用TTS播放 ' + word;
+                    };
+
+                    utterance.onend = () => {
+                        if (statusSpan) statusSpan.textContent = '✅ TTS播放完成';
+                    };
+
+                    utterance.onerror = (e) => {
+                        console.error('TTS错误:', e);
+                        if (statusSpan) statusSpan.textContent = '❌ TTS播放失败';
+                    };
+
+                    window.speechSynthesis.speak(utterance);
+
+                } catch (error) {
+                    console.error('TTS异常:', error);
+                    if (statusSpan) statusSpan.textContent = '❌ TTS播放异常';
+                }
+            } else {
+                if (statusSpan) statusSpan.textContent = '❌ 浏览器不支持TTS';
+            }
+        }
+
+        // 页面加载时运行测试
+        document.addEventListener('DOMContentLoaded', testAudioPlay);
+    </script>
+</body>
+</html>

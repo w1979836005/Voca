@@ -85,16 +85,29 @@ class WordListService {
                 joinedWordListIds = new Set(userWordLists.map(uw => uw.wordlistId));
             }
 
+            // 获取每个词单的真实单词数量
+            const wordListIds = wordlists.map(w => w.id);
+            const wordCountsMap = new Map();
+
+            // 批量查询每个词单的单词数量
+            for (const wordListId of wordListIds) {
+                const [countResult] = await db.sequelize.query(
+                    'SELECT COUNT(*) as count FROM word_list_word WHERE word_list_id = ?',
+                    {
+                        replacements: [wordListId],
+                        type: db.Sequelize.QueryTypes.SELECT
+                    }
+                );
+                wordCountsMap.set(wordListId, countResult.count);
+            }
+
             // 格式化返回数据
             const formattedWordLists = wordlists.map(wordlist => {
-                // 计算词单中的单词数量（这里先返回0，实际项目中可以通过关联查询获得）
-                const wordCount = 0; // TODO: 后续实现关联查询获取真实单词数量
-
                 return {
                     wordListId: wordlist.id,
                     wordListName: wordlist.wordListName,
                     description: wordlist.description,
-                    wordCount: wordCount,
+                    wordCount: wordCountsMap.get(wordlist.id) || 0, // 使用真实单词数量
                     isSystem: wordlist.isSystemBuiltIn === 1,
                     creator: null, // TODO: 后续实现关联查询获取创建者信息
                     createdAt: wordlist.createTime.toISOString(),
@@ -162,12 +175,21 @@ class WordListService {
                 joined = !!userWordList;
             }
 
+            // 查询词单的单词数量
+            const [countResult] = await db.sequelize.query(
+                'SELECT COUNT(*) as count FROM word_list_word WHERE word_list_id = ?',
+                {
+                    replacements: [wordListId],
+                    type: db.Sequelize.QueryTypes.SELECT
+                }
+            );
+
             // 格式化返回数据
             return {
                 wordListId: wordlist.id,
                 wordListName: wordlist.wordListName,
                 description: wordlist.description,
-                wordCount: 0, // TODO: 后续实现关联查询获取真实单词数量
+                wordCount: countResult.count || 0, // 使用真实单词数量
                 isSystem: wordlist.isSystemBuiltIn === 1,
                 creator: null, // TODO: 后续实现关联查询获取创建者信息
                 createdAt: wordlist.createTime.toISOString(),
@@ -258,16 +280,29 @@ class WordListService {
             );
             const joinedWordListIds = new Set(userWordLists.map(uw => uw.wordlistId));
 
+            // 获取每个词单的真实单词数量
+            const wordListIds = wordlists.map(w => w.id);
+            const wordCountsMap = new Map();
+
+            // 批量查询每个词单的单词数量
+            for (const wordListId of wordListIds) {
+                const [countResult] = await db.sequelize.query(
+                    'SELECT COUNT(*) as count FROM word_list_word WHERE word_list_id = ?',
+                    {
+                        replacements: [wordListId],
+                        type: db.Sequelize.QueryTypes.SELECT
+                    }
+                );
+                wordCountsMap.set(wordListId, countResult.count);
+            }
+
             // 格式化返回数据
             const formattedWordLists = wordlists.map(wordlist => {
-                // 计算词单中的单词数量（这里先返回0，实际项目中可以通过关联查询获得）
-                const wordCount = 0; // TODO: 后续实现关联查询获取真实单词数量
-
                 return {
                     wordListId: wordlist.id,
                     wordListName: wordlist.wordListName,
                     description: wordlist.description,
-                    wordCount: wordCount,
+                    wordCount: wordCountsMap.get(wordlist.id) || 0, // 使用真实单词数量
                     isSystem: wordlist.isSystemBuiltIn === 1,
                     creator: null, // TODO: 后续实现关联查询获取创建者信息
                     createdAt: wordlist.createTime.toISOString(),
@@ -429,36 +464,76 @@ class WordListService {
             throw new NotFoundException('词单不存在');
         }
 
-        const { count, rows: words } = await db.word.findAndCountAll({
-            include: [{
-                model: db.wordlist,
-                through: { where: { wordListId } },
-                where: { isDelete: 0 }
-            }],
-            limit: parseInt(limit),
-            offset: parseInt(offset),
-            order: [[db.word_list_word, 'createdAt', 'ASC']]
-        });
+        // 使用原生SQL查询，这是最可靠的方式
+        console.log('使用原生SQL查询词单单词...');
 
-        return {
-            wordListId: wordListId,
-            wordListName: wordList.wordListName,
-            words: words.map(word => ({
-                wordId: word.id,
-                word: word.word,
-                pronunciation: word.pronunciation,
-                definition: word.definition,
-                example: word.exampleSentence,
-                affixes: word.affixes,
-                difficulty: word.difficulty
-            })),
-            pagination: {
-                current: parseInt(page),
-                pageSize: parseInt(limit),
-                total: count,
-                pages: Math.ceil(count / limit)
-            }
-        };
+        // 查询总数
+        const countQuery = `
+            SELECT COUNT(*) as total
+            FROM word w
+            INNER JOIN word_list_word wlw ON w.id = wlw.word_id
+            WHERE wlw.word_list_id = ? AND w.is_delete = 0
+        `;
+
+        // 查询单词列表
+        const wordsQuery = `
+            SELECT
+                w.id,
+                w.word,
+                w.phonetic,
+                w.definition,
+                w.example_sentence,
+                w.affixes,
+                w.difficulty,
+                w.audio_url,
+                w.create_time,
+                w.update_time
+            FROM word w
+            INNER JOIN word_list_word wlw ON w.id = wlw.word_id
+            WHERE wlw.word_list_id = ? AND w.is_delete = 0
+            ORDER BY w.id ASC
+            LIMIT ? OFFSET ?
+        `;
+
+        try {
+            // 执行查询
+            const [countResult] = await db.sequelize.query(countQuery, {
+                replacements: [wordListId],
+                type: db.Sequelize.QueryTypes.SELECT
+            });
+
+            const words = await db.sequelize.query(wordsQuery, {
+                replacements: [wordListId, parseInt(limit), parseInt(offset)],
+                type: db.Sequelize.QueryTypes.SELECT
+            });
+
+            console.log(`查询结果: 共${countResult.total}个单词，返回${words.length}个`);
+
+            return {
+                wordListId: wordListId,
+                wordListName: wordList.wordListName,
+                words: words.map(word => ({
+                    wordId: word.id,
+                    word: word.word,
+                    pronunciation: word.phonetic,
+                    definition: word.definition,
+                    example: word.example_sentence,  // 修复列名映射
+                    affixes: word.affixes,
+                    difficulty: word.difficulty,
+                    audioUrl: word.audio_url  // 添加音频URL
+                })),
+                pagination: {
+                    current: parseInt(page),
+                    pageSize: parseInt(limit),
+                    total: countResult.total,
+                    pages: Math.ceil(countResult.total / limit)
+                }
+            };
+
+        } catch (error) {
+            console.error('SQL查询失败:', error);
+            throw new BusinessException('获取词单单词失败: ' + error.message);
+        }
     }
 
     /**
@@ -702,12 +777,28 @@ class WordListService {
                 type: db.Sequelize.QueryTypes.SELECT
             });
 
+            // 获取每个词单的真实单词数量
+            const wordListIds = wordLists.map(w => w.wordListId);
+            const wordCountsMap = new Map();
+
+            // 批量查询每个词单的单词数量
+            for (const wordListId of wordListIds) {
+                const [countResult] = await db.sequelize.query(
+                    'SELECT COUNT(*) as count FROM word_list_word WHERE word_list_id = ?',
+                    {
+                        replacements: [wordListId],
+                        type: db.Sequelize.QueryTypes.SELECT
+                    }
+                );
+                wordCountsMap.set(wordListId, countResult.count);
+            }
+
             // 格式化返回数据
             const formattedWordLists = wordLists.map(wordlist => ({
                 wordListId: wordlist.wordListId,
                 wordListName: wordlist.wordListName,
                 description: wordlist.description,
-                wordCount: 0, // TODO: 后续实现关联查询获取真实单词数量
+                wordCount: wordCountsMap.get(wordlist.wordListId) || 0, // 使用真实单词数量
                 isSystem: wordlist.isSystem === 1,
                 progress: wordlist.progress || 0,
                 learnedCount: wordlist.learnedCount || 0,

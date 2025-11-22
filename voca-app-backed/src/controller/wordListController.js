@@ -203,7 +203,7 @@ const validationRules = {
     getWordsInWordList: Joi.object({
         page: Joi.number().min(1).optional(),
         limit: Joi.number().min(1).max(100).optional()
-    }),
+    }).unknown(true),
 
     addWordsToWordList: Joi.object({
         wordIds: Joi.array().items(Joi.number().integer().positive()).min(1).max(100).required()

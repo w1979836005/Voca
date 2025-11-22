@@ -14,7 +14,11 @@
       "Bash(cd /d \"D:\\Github\\Voca\\Voca-app-fronted\")",
       "Bash(find:*)",
       "Bash(npm test)",
-      "Bash(move:*)"
+      "Bash(move:*)",
+      "Bash(cd:*)",
+      "Bash(start test-audio.html)",
+      "Bash(start test-audio-fix.html)",
+      "Bash(start:*)"
     ],
     "deny": [],
     "ask": []

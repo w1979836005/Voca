@@ -6,7 +6,7 @@
 		<view class="button-group">
 
 			<!-- 主要按钮 - 炭黑色背景 -->
-			<wd-button type="primary">开始学习</wd-button>
+			<wd-button type="primary" @click="startLearning">开始学习</wd-button>
 
 			<!-- 成功按钮 - 薄荷绿背景 -->
 			<wd-button type="success">完成</wd-button>
@@ -42,7 +42,12 @@
 
 		},
 		methods: {
-
+			startLearning() {
+				// 直接跳转到首页，让用户选择词单后再开始学习
+				uni.switchTab({
+					url: '/pages/home/home'
+				})
+			}
 		}
 	}
 </script>

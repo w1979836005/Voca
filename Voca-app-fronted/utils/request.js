@@ -31,7 +31,7 @@ class Request {
     getBaseURL() {
         // 可以根据不同环境返回不同的baseURL
         // #ifdef H5
-        return 'http://localhost:3000/api';  // 修正为后端实际端口
+        return 'http://localhost:3000/api';  // 后端运行在3000端口
         // #endif
 
         // #ifdef MP-WEIXIN
@@ -41,13 +41,13 @@ class Request {
         // #ifdef APP-PLUS
         // 开发环境
         if (process.env.NODE_ENV === 'development') {
-            return 'http://192.168.1.100:3000/api'; // 替换为你的开发环境IP，修正端口
+            return 'http://192.168.1.100:3000/api'; // 替换为你的开发环境IP，使用3000端口
         }
         // 生产环境
         return 'https://your-domain.com/api';
         // #endif
 
-        return 'http://localhost:3000/api';  // 修正为后端实际端口
+        return 'http://localhost:3000/api';  // 后端运行在3000端口
     }
 
     /**

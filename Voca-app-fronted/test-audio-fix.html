@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音频播放修复测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .test-item {
+            background: #f5f5f5;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        .status {
+            margin-left: 10px;
+            color: #666;
+        }
+        .word-info {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .audio-url {
+            font-size: 12px;
+            color: #888;
+            word-break: break-all;
+            margin: 5px 0;
+        }
+        .debug-log {
+            background: #000;
+            color: #0f0;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            margin: 10px 0;
+            border-radius: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>音频播放修复测试</h1>
+    <p>测试修复后的音频播放逻辑，防止重复播放</p>
+
+    <div class="debug-log" id="debug-log">
+        调试日志：<br>
+    </div>
+
+    <div id="test-results">
+        <p>正在加载数据...</p>
+    </div>
+
+    <script>
+        let isPlaying = false; // 模拟播放状态
+
+        // 日志输出
+        function log(message) {
+            const logDiv = document.getElementById('debug-log');
+            const time = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `[${time}] ${message}<br>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        // 测试音频播放
+        async function testAudioPlay() {
+            const resultsDiv = document.getElementById('test-results');
+
+            try {
+                log('开始获取词单数据...');
+
+                // 获取词单单词数据
+                const response = await fetch('http://localhost:3000/api/wordlist/1/words?page=1&limit=3');
+                const data = await response.json();
+
+                if (data.code !== 200) {
+                    log('❌ 获取数据失败: ' + data.message);
+                    resultsDiv.innerHTML = `<p style="color: red;">获取数据失败: ${data.message}</p>`;
+                    return;
+                }
+
+                log(`✅ 成功获取数据，共${data.data.words.length}个单词`);
+                let html = '<h2>测试结果 (修复后):</h2>';
+
+                data.data.words.forEach((word, index) => {
+                    html += `
+                        <div class="test-item">
+                            <div class="word-info">${index + 1}. ${word.word} ${word.pronunciation || ''}</div>
+                            <div class="audio-url">音频URL: ${word.audioUrl || '无'}</div>
+                            <button id="btn-${index}" onclick="testPlayAudio('${word.audioUrl}', '${word.word}', ${index})">测试播放</button>
+                            <button onclick="testTTS('${word.word}')">测试TTS</button>
+                            <span class="status" id="status-${index}">等待测试</span>
+                        </div>
+                    `;
+                });
+
+                resultsDiv.innerHTML = html;
+                log('✅ 测试界面渲染完成');
+
+            } catch (error) {
+                log('❌ 测试失败: ' + error.message);
+                resultsDiv.innerHTML = `<p style="color: red;">测试失败: ${error.message}</p>`;
+            }
+        }
+
+        // 修复后的音频播放函数
+        function testPlayAudio(audioUrl, word, index) {
+            const statusSpan = document.getElementById(`status-${index}`);
+            const button = document.getElementById(`btn-${index}`);
+
+            log(`🔊 点击播放: ${word}`);
+
+            // 防止重复点击
+            if (isPlaying) {
+                log('⚠️ 正在播放中，忽略重复点击');
+                statusSpan.textContent = '⚠️ 正在播放中，忽略重复点击';
+                return;
+            }
+
+            if (!audioUrl || audioUrl.trim() === '') {
+                log(`ℹ️ ${word} 无音频URL，使用TTS`);
+                statusSpan.textContent = 'ℹ️ 无音频URL，使用TTS';
+                testTTS(word);
+                return;
+            }
+
+            // 设置播放状态
+            isPlaying = true;
+            button.disabled = true;
+            button.textContent = '播放中...';
+            statusSpan.textContent = '🔄 正在加载音频...';
+
+            log(`🎵 开始播放音频: ${word}`);
+
+            try {
+                const audio = new Audio(audioUrl);
+                let hasStarted = false;
+
+                audio.addEventListener('canplay', () => {
+                    log('✅ 音频可以播放');
+                    if (!hasStarted) {
+                        hasStarted = true;
+                        audio.play();
+                    }
+                });
+
+                audio.addEventListener('play', () => {
+                    log('🔊 开始播放 ' + word);
+                    statusSpan.textContent = '🔊 正在播放 ' + word;
+                });
+
+                audio.addEventListener('ended', () => {
+                    log('✅ 播放完成');
+                    isPlaying = false;
+                    button.disabled = false;
+                    button.textContent = '测试播放';
+                    statusSpan.textContent = '✅ 播放完成';
+                });
+
+                audio.addEventListener('error', (e) => {
+                    log('❌ 音频播放失败: ' + JSON.stringify(e));
+                    isPlaying = false;
+                    button.disabled = false;
+                    button.textContent = '测试播放';
+                    statusSpan.textContent = '❌ 音频播放失败，尝试TTS';
+                    testTTSDirect(word);
+                });
+
+                audio.addEventListener('pause', () => {
+                    log('⏸️ 音频暂停');
+                });
+
+                // 设置超时
+                const timeout = setTimeout(() => {
+                    log('⏰ 播放超时');
+                    isPlaying = false;
+                    button.disabled = false;
+                    button.textContent = '测试播放';
+                    statusSpan.textContent = '⏰ 播放超时';
+                    audio.pause();
+                }, 10000);
+
+                audio.addEventListener('ended', () => {
+                    clearTimeout(timeout);
+                });
+
+                audio.addEventListener('error', () => {
+                    clearTimeout(timeout);
+                });
+
+                audio.load();
+
+            } catch (error) {
+                log('❌ 音频播放异常: ' + error.message);
+                isPlaying = false;
+                button.disabled = false;
+                button.textContent = '测试播放';
+                statusSpan.textContent = '❌ 音频播放异常，尝试TTS';
+                testTTSDirect(word);
+            }
+        }
+
+        // 直接测试TTS
+        function testTTS(word) {
+            testTTSDirect(word);
+        }
+
+        function testTTSDirect(word) {
+            log(`🗣️ 使用TTS播放: ${word}`);
+
+            if ('speechSynthesis' in window) {
+                try {
+                    const utterance = new SpeechSynthesisUtterance(word);
+                    utterance.lang = 'en-US';
+                    utterance.rate = 0.8;
+
+                    utterance.onstart = () => {
+                        log('🔊 TTS开始播放 ' + word);
+                    };
+
+                    utterance.onend = () => {
+                        log('✅ TTS播放完成');
+                    };
+
+                    utterance.onerror = (e) => {
+                        log('❌ TTS错误: ' + JSON.stringify(e));
+                    };
+
+                    window.speechSynthesis.speak(utterance);
+
+                } catch (error) {
+                    log('❌ TTS异常: ' + error.message);
+                }
+            } else {
+                log('❌ 浏览器不支持TTS');
+            }
+        }
+
+        // 页面加载时运行测试
+        document.addEventListener('DOMContentLoaded', () => {
+            log('🚀 页面加载完成');
+            testAudioPlay();
+        });
+    </script>
+</body>
+</html>

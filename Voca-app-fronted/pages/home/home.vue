@@ -424,8 +424,17 @@ const loadWordlistProgress = () => {
 
 // 开始学习
 const startLearning = () => {
+	// 确保有当前词单ID
+	if (!currentWordlistId.value) {
+		uni.showToast({
+			title: '请先选择词单',
+			icon: 'none'
+		})
+		return
+	}
+
 	uni.navigateTo({
-		url: '/pages/learning/learning?type=new'
+		url: `/pages/learning/learning?type=new&wordListId=${currentWordlistId.value}`
 	})
 }
 
@@ -439,8 +448,17 @@ const startReview = () => {
 		return
 	}
 
+	// 确保有当前词单ID
+	if (!currentWordlistId.value) {
+		uni.showToast({
+			title: '请先选择词单',
+			icon: 'none'
+		})
+		return
+	}
+
 	uni.navigateTo({
-		url: '/pages/learning/learning?type=review'
+		url: `/pages/learning/learning?type=review&wordListId=${currentWordlistId.value}`
 	})
 }
 

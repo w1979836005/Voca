@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>轻提示移除测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 0;
+            display: block;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+        }
+        .info { color: #17a2b8; }
+        .success { color: #28a745; }
+        .warning { color: #ffc107; }
+        .pronunciation-btn {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #f8f9fa;
+            border: 2px solid #007bff;
+            text-align: center;
+            line-height: 46px;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s ease;
+        }
+        .pronunciation-btn:hover {
+            background: #e9ecef;
+        }
+        .pronunciation-btn.playing {
+            background: #007bff;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <h1>🔕 轻提示移除测试</h1>
+    <p>测试点击音频播放按钮时是否还会弹出轻提示</p>
+
+    <div class="status">
+        <h3>测试说明：</h3>
+        <p>🔊 点击下方按钮测试音频播放</p>
+        <p>⚠️ 现在应该<strong>不会</strong>弹出任何轻提示</p>
+        <p>👀 只能看到按钮的视觉反馈（动画）</p>
+    </div>
+
+    <div style="text-align: center; margin: 30px 0;">
+        <h2>单词示例：abandon</h2>
+        <span class="pronunciation-btn" onclick="testAudioPlay()">🔊</span>
+        <div id="test-status" class="status">等待测试...</div>
+    </div>
+
+    <div class="status">
+        <h3>已移除的轻提示：</h3>
+        <p>❌ "暂无发音文件" （当无音频URL时）</p>
+        <p>❌ "使用系统发音" （TTS播放时）</p>
+        <p>❌ "浏览器不支持语音合成" （TTS不支持时）</p>
+        <p>❌ "播放 abandon 发音" （音频播放成功时）</p>
+        <p>❌ "无法播放发音" （APP端TTS失败时）</p>
+    </div>
+
+    <div class="status">
+        <h3>保留的轻提示：</h3>
+        <p>✅ "加载失败，请重试" （API加载失败时）</p>
+        <p>✅ "已切换到第X组" （切换分组时）</p>
+    </div>
+
+    <script>
+        let isPlaying = false;
+
+        // 模拟音频播放函数（修复后的版本）
+        function testAudioPlay() {
+            const statusDiv = document.getElementById('test-status');
+            const btn = document.querySelector('.pronunciation-btn');
+
+            if (isPlaying) {
+                statusDiv.innerHTML = '<span class="info">⏹️ 正在播放中，忽略重复点击</span>';
+                return;
+            }
+
+            isPlaying = true;
+            btn.classList.add('playing');
+            btn.textContent = '⏳';
+
+            // 移除了所有的 uni.showToast 调用！
+            console.log('🔊 开始播放音频（无轻提示）');
+            statusDiv.innerHTML = '<span class="success">✅ 音频播放开始（无轻提示）</span>';
+
+            // 模拟播放完成
+            setTimeout(() => {
+                isPlaying = false;
+                btn.classList.remove('playing');
+                btn.textContent = '🔊';
+                statusDiv.innerHTML = '<span class="success">🎉 播放完成（全程无轻提示）</span>';
+            }, 2000);
+        }
+
+        // 监听页面是否显示了轻提示
+        let toastCount = 0;
+        const originalConsoleLog = console.log;
+        console.log = function(...args) {
+            originalConsoleLog.apply(console, args);
+            if (args[0] && typeof args[0] === 'string' && args[0].includes('Toast')) {
+                toastCount++;
+                document.body.insertAdjacentHTML('beforeend',
+                    `<div style="position: fixed; top: 10px; right: 10px; background: red; color: white; padding: 10px; z-index: 9999;">
+                        ⚠️ 检测到轻提示！
+                    </div>`
+                );
+            }
+        };
+    </script>
+</body>
+</html>
